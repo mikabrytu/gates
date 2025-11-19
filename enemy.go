@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gates/systems"
 	"time"
 
 	"github.com/mikabrytu/gomes-engine/events"
@@ -20,6 +21,8 @@ func enemy() {
 		Height: size * 2,
 	}
 
+	hp_max := 50
+	hp_max_width := rect.Width
 	hp_rect := rect
 	hp_rect.PosY -= 24
 	hp_rect.Height = 16
@@ -37,6 +40,8 @@ func enemy() {
 		render.Transparent,
 	)
 
+	health := systems.InitHealth(hp_max)
+
 	lifecycle.Register(&lifecycle.GameObject{
 		Start: func() {
 			sprite.Init()
@@ -44,8 +49,14 @@ func enemy() {
 			go enemy_attack_task()
 
 			events.Subscribe(PLAYER_ATTACK_EVENT, func(params ...any) error {
+				damage := params[0].([]any)[0].([]any)[0].(int32)
+				health.TakeDamage(int(damage))
+
 				return nil
 			})
+		},
+		Update: func() {
+			hp_rect.Width = (hp_max_width * health.GetCurrent()) / hp_max
 		},
 		Render: func() {
 			render.DrawRect(hp_rect, render.Red)
@@ -65,5 +76,7 @@ func enemy_attack_task() {
 		time.AfterFunc(time.Millisecond*800, func() {
 			enemy_render_attack = false
 		})
+
+		events.Emit(ENEMY_ATTACK_EVENT, int32(10))
 	}
 }
