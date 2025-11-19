@@ -2,8 +2,8 @@ github.com/AlexanderGrom/go-event v0.0.0-20180406111247-a2f1486e096e h1:VGZKZCJ6
 github.com/AlexanderGrom/go-event v0.0.0-20180406111247-a2f1486e096e/go.mod h1:EDsvGVsiDX518UqAQ5Ve+zBDNZlKrh3wvYRujZmgIwo=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/mikabrytu/gomes-engine v1.3.6-dev h1:kSs4rDC1tMqzFklNK2OalhWk7LTOAUHbHuJ7garPW3k=
-github.com/mikabrytu/gomes-engine v1.3.6-dev/go.mod h1:bJXha5hvm0aU2cvBe0Iebo6tRlrJ+UXfvzcFBv/x10o=
+github.com/mikabrytu/gomes-engine v1.3.7-dev h1:RmUCyzgSu6zqjYSlQtDA889WcrT1LJ8J5eVtHDvvDlg=
+github.com/mikabrytu/gomes-engine v1.3.7-dev/go.mod h1:bJXha5hvm0aU2cvBe0Iebo6tRlrJ+UXfvzcFBv/x10o=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
