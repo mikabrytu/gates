@@ -9,6 +9,8 @@ import (
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
+var enemy_render_attack bool = false
+
 func enemy() {
 	size := 230
 	rect := utils.RectSpecs{
@@ -18,9 +20,15 @@ func enemy() {
 		Height: size * 2,
 	}
 
-	hpRect := rect
-	hpRect.PosY -= 24
-	hpRect.Height = 16
+	hp_rect := rect
+	hp_rect.PosY -= 24
+	hp_rect.Height = 16
+
+	attack_circle := utils.CircleSpecs{
+		PosX:   SCREEN_SIZE.X / 2,
+		PosY:   rect.PosY + rect.Height + 64,
+		Radius: 64,
+	}
 
 	sprite := render.NewSprite(
 		"Dragon",
@@ -36,12 +44,15 @@ func enemy() {
 			go enemy_attack_task()
 
 			events.Subscribe(PLAYER_ATTACK_EVENT, func(params ...any) error {
-				println("Enemy damaged")
 				return nil
 			})
 		},
 		Render: func() {
-			render.DrawRect(hpRect, render.Red)
+			render.DrawRect(hp_rect, render.Red)
+
+			if enemy_render_attack {
+				render.DrawCircle(attack_circle, render.Red)
+			}
 		},
 	})
 }
@@ -49,5 +60,10 @@ func enemy() {
 func enemy_attack_task() {
 	for range time.Tick(time.Millisecond * 5000) {
 		println("Enemy attack on a set interval")
+
+		enemy_render_attack = true
+		time.AfterFunc(time.Millisecond*800, func() {
+			enemy_render_attack = false
+		})
 	}
 }

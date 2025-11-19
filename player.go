@@ -41,7 +41,6 @@ func player() {
 					return nil
 				}
 
-				println("Player attack")
 				can_attack = false
 				events.Emit(PLAYER_ATTACK_EVENT)
 
