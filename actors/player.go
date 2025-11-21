@@ -15,6 +15,7 @@ var player_sprite *render.Sprite
 var player_health *systems.Health
 var player_weapon_rect utils.RectSpecs
 var player_hp_rect utils.RectSpecs
+var player_attack_damage int = 10
 var player_max_hp int
 var player_max_hp_width int
 var player_can_attack bool = true
@@ -48,7 +49,7 @@ func Player() {
 }
 
 func player_init() {
-	player_max_hp = 100
+	player_max_hp = 1000
 	player_max_hp_width = 512
 
 	player_weapon_rect = utils.RectSpecs{
@@ -81,7 +82,7 @@ func player_click_listener() {
 	}
 
 	player_can_attack = false
-	events.Emit(values.PLAYER_ATTACK_EVENT, int32(5))
+	events.Emit(values.PLAYER_ATTACK_EVENT, int32(player_attack_damage))
 
 	temp_rect := player_weapon_rect
 	temp_rect.PosX = (values.SCREEN_SIZE.X / 2) - 128

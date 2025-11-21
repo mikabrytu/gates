@@ -14,6 +14,10 @@ func InitHealth(max int) *Health {
 	return health
 }
 
+func (h *Health) ChangeMax(max int) {
+	h.max = max
+}
+
 func (h *Health) Reset() {
 	h.current = h.max
 }
