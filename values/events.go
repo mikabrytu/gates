@@ -1,0 +1,5 @@
+package values
+
+const GAME_OVER_EVENT string = "GAME_OVER_EVENT"
+const PLAYER_ATTACK_EVENT string = "PLAYER_ATTACK_EVENT"
+const ENEMY_ATTACK_EVENT string = "ENEMY_ATTACK_EVENT"

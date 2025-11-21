@@ -1,7 +1,8 @@
-package main
+package actors
 
 import (
 	"gates/systems"
+	"gates/values"
 	"time"
 
 	"github.com/mikabrytu/gomes-engine/events"
@@ -21,11 +22,11 @@ var enemy_render_attack bool = false
 var enemy_is_alive bool = false
 var enemy_attack_done = make(chan bool)
 
-func enemy() {
+func Enemy() {
 	enemy_init()
 	enemy_respawn()
 
-	events.Subscribe(GAME_OVER_EVENT, func(params ...any) error {
+	events.Subscribe(values.GAME_OVER_EVENT, func(params ...any) error {
 		enemy_stop()
 		return nil
 	})
@@ -34,7 +35,7 @@ func enemy() {
 		Start: func() {
 			enemy_sprite.Init()
 
-			events.Subscribe(PLAYER_ATTACK_EVENT, func(params ...any) error {
+			events.Subscribe(values.PLAYER_ATTACK_EVENT, func(params ...any) error {
 				damage := params[0].([]any)[0].([]any)[0].(int32)
 				enemy_health.TakeDamage(int(damage))
 
@@ -63,7 +64,7 @@ func enemy_init() {
 
 	size := 230
 	rect := utils.RectSpecs{
-		PosX:   (SCREEN_SIZE.X / 2) - size,
+		PosX:   (values.SCREEN_SIZE.X / 2) - size,
 		PosY:   32,
 		Width:  (size + 5) * 2,
 		Height: size * 2,
@@ -76,7 +77,7 @@ func enemy_init() {
 	enemy_hp_rect.Height = 16
 
 	enemt_attack_circle = utils.CircleSpecs{
-		PosX:   SCREEN_SIZE.X / 2,
+		PosX:   values.SCREEN_SIZE.X / 2,
 		PosY:   rect.PosY + rect.Height + 64,
 		Radius: 64,
 	}
@@ -148,7 +149,7 @@ func enemy_attack_task() {
 				enemy_render_attack = false
 			})
 
-			events.Emit(ENEMY_ATTACK_EVENT, int32(50))
+			events.Emit(values.ENEMY_ATTACK_EVENT, int32(5))
 		}
 	}
 }
