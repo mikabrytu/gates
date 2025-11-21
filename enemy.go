@@ -18,11 +18,17 @@ var enemt_attack_circle utils.CircleSpecs
 var enemy_hp_max int
 var enemy_hp_max_width int
 var enemy_render_attack bool = false
+var enemy_is_alive bool = false
 var enemy_attack_done = make(chan bool)
 
 func enemy() {
 	enemy_init()
 	enemy_respawn()
+
+	events.Subscribe(GAME_OVER_EVENT, func(params ...any) error {
+		enemy_stop()
+		return nil
+	})
 
 	enemy_go = lifecycle.Register(&lifecycle.GameObject{
 		Start: func() {
@@ -33,12 +39,7 @@ func enemy() {
 				enemy_health.TakeDamage(int(damage))
 
 				if enemy_health.GetCurrent() <= 0 {
-					go func() {
-						enemy_attack_done <- true
-					}()
-
-					enemy_sprite.ClearSprite()
-					lifecycle.Disable(enemy_go)
+					enemy_stop()
 				}
 
 				return nil
@@ -58,6 +59,8 @@ func enemy() {
 }
 
 func enemy_init() {
+	enemy_is_alive = true
+
 	size := 230
 	rect := utils.RectSpecs{
 		PosX:   (SCREEN_SIZE.X / 2) - size,
@@ -98,8 +101,22 @@ func enemy_init() {
 	go enemy_attack_task()
 }
 
+func enemy_stop() {
+	go func() {
+		enemy_attack_done <- true
+	}()
+
+	enemy_is_alive = false
+	enemy_sprite.ClearSprite()
+	lifecycle.Disable(enemy_go)
+}
+
 func enemy_respawn() {
 	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_SPACE, func(params ...any) error {
+		if enemy_is_alive {
+			return nil
+		}
+
 		if enemy_go != nil {
 			go func() {
 				println("channel value should be false by now")
@@ -131,7 +148,7 @@ func enemy_attack_task() {
 				enemy_render_attack = false
 			})
 
-			events.Emit(ENEMY_ATTACK_EVENT, int32(10))
+			events.Emit(ENEMY_ATTACK_EVENT, int32(50))
 		}
 	}
 }
