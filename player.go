@@ -82,4 +82,8 @@ func player_click_listener() {
 
 func player_take_damage_listener(damage int) {
 	player_health.TakeDamage(damage)
+
+	if player_health.GetCurrent() <= 0 {
+		events.Emit(GAME_OVER_EVENT)
+	}
 }
