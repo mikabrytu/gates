@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gates/systems"
 	"gates/values"
+	"math/rand/v2"
 	"time"
 
 	"github.com/mikabrytu/gomes-engine/events"
@@ -107,9 +108,10 @@ func player_damage() int {
 	weapon := sword
 	mod := player_skills.STR
 
-	var damage int = weapon + (player_skills.STR * mod)
+	dice_roll := rand.IntN(weapon-(weapon/2)) + (weapon / 2)
+	var damage int = dice_roll + (player_skills.STR * mod)
 
-	println(fmt.Sprintf("Player is dealing %v damage to enemy", damage))
+	println(values.Green + fmt.Sprintf("Player is dealing %v damage to enemy", damage) + values.Reset)
 	return damage
 }
 
