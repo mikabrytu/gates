@@ -54,24 +54,33 @@ func listeners() {
 	events.Subscribe(values.ENEMY_DEAD_EVENT, func(params ...any) error {
 		game_state = Waiting
 		rounds += 1
-		return nil
-	})
 
-	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_SPACE, func(params ...any) error {
-		if game_state == Waiting {
-			if rounds >= 3 && rounds < 7 {
-				actors.LoadEnemy(enemies.Skeleton)
-			}
-
-			if rounds >= 7 {
-				actors.LoadEnemy(enemies.Dragon)
-			}
-
-			println("Restarting game!")
-			game_state = Running
-			events.Emit(values.GAME_RESTART_EVENT)
+		// Player Level Up
+		if rounds == 2 || rounds == 4 || rounds == 7 {
+			actors.PlayerLevelUp()
 		}
 
 		return nil
 	})
+
+	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_SPACE, func(params ...any) error {
+		sequence()
+		return nil
+	})
+}
+
+func sequence() {
+	if game_state == Waiting {
+		if rounds >= 3 && rounds < 7 {
+			actors.LoadEnemy(enemies.Skeleton)
+		}
+
+		if rounds >= 7 {
+			actors.LoadEnemy(enemies.Dragon)
+		}
+
+		println("Restarting game!")
+		game_state = Running
+		events.Emit(values.GAME_RESTART_EVENT)
+	}
 }
