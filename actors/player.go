@@ -1,6 +1,7 @@
 package actors
 
 import (
+	"fmt"
 	"gates/systems"
 	"gates/values"
 	"time"
@@ -13,12 +14,13 @@ import (
 
 var player_sprite *render.Sprite
 var player_health *systems.Health
+var player_skills *systems.Skill
 var player_weapon_rect utils.RectSpecs
 var player_hp_rect utils.RectSpecs
-var player_attack_damage int = 10
 var player_max_hp int
 var player_max_hp_width int
 var player_can_attack bool = true
+var player_can_level_up = false
 
 func Player() {
 	player_init()
@@ -38,6 +40,21 @@ func Player() {
 
 				return nil
 			})
+
+			events.Subscribe(events.INPUT_KEYBOARD_PRESSED_1, func(params ...any) error {
+				player_level_up_listener(1)
+				return nil
+			})
+
+			events.Subscribe(events.INPUT_KEYBOARD_PRESSED_2, func(params ...any) error {
+				player_level_up_listener(2)
+				return nil
+			})
+
+			events.Subscribe(events.INPUT_KEYBOARD_PRESSED_3, func(params ...any) error {
+				player_level_up_listener(3)
+				return nil
+			})
 		},
 		Update: func() {
 			player_hp_rect.Width = (player_max_hp_width * player_health.GetCurrent()) / player_max_hp
@@ -48,8 +65,13 @@ func Player() {
 	})
 }
 
+func PlayerLevelUp() {
+	player_can_level_up = true
+	println("LEVEL UP. Select 1 to increase STR, 2 to increase INT and 3 to increase SPD")
+}
+
 func player_init() {
-	player_max_hp = 1000
+	player_max_hp = 100
 	player_max_hp_width = 512
 
 	player_weapon_rect = utils.RectSpecs{
@@ -74,6 +96,21 @@ func player_init() {
 	)
 
 	player_health = systems.InitHealth(player_max_hp)
+	player_skills = systems.NewSkill()
+}
+
+func player_damage() int {
+	sword := 6
+	//bow := 3
+	//spell_fire := 10
+
+	weapon := sword
+	mod := player_skills.STR
+
+	var damage int = weapon + (player_skills.STR * mod)
+
+	println(fmt.Sprintf("Player is dealing %v damage to enemy", damage))
+	return damage
 }
 
 func player_click_listener() {
@@ -82,7 +119,7 @@ func player_click_listener() {
 	}
 
 	player_can_attack = false
-	events.Emit(values.PLAYER_ATTACK_EVENT, int32(player_attack_damage))
+	events.Emit(values.PLAYER_ATTACK_EVENT, int32(player_damage()))
 
 	temp_rect := player_weapon_rect
 	temp_rect.PosX = (values.SCREEN_SIZE.X / 2) - 128
@@ -101,4 +138,31 @@ func player_take_damage_listener(damage int) {
 	if player_health.GetCurrent() <= 0 {
 		events.Emit(values.GAME_OVER_EVENT)
 	}
+}
+
+func player_level_up_listener(skill int) {
+	if !player_can_level_up {
+		return
+	}
+
+	level_up := systems.Skill{}
+	if skill == 1 {
+		level_up.STR = 1
+	}
+	if skill == 2 {
+		level_up.INT = 1
+	}
+	if skill == 3 {
+		level_up.SPD = 1
+	}
+
+	player_skills.LevelUp(level_up)
+	player_can_level_up = false
+	player_health.Reset()
+
+	println(fmt.Sprintf("Player Current Level: %d {STR: %d, INT: %d, SPD: %v} \n",
+		player_skills.GetLevel(),
+		player_skills.STR,
+		player_skills.INT,
+		player_skills.SPD))
 }
