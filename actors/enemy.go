@@ -167,7 +167,7 @@ func enemy_attack_task(damage int, interval int) {
 			return
 		case <-ticker.C:
 			message := fmt.Sprintf("Enemy attacked with %d damage", damage)
-			println(message)
+			println(values.Red + message + values.Reset)
 
 			enemy_render_attack = true
 			time.AfterFunc(time.Millisecond*800, func() {
