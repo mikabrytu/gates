@@ -61,7 +61,6 @@ func Enemy() {
 		},
 		Render: func() {
 			render.DrawRect(enemy_hp_rect, render.Red)
-			render.DrawRect(enemy_sprite.GetRect(), render.White)
 
 			if enemy_render_attack {
 				render.DrawCircle(enemt_attack_circle, render.Red)
@@ -71,15 +70,15 @@ func Enemy() {
 }
 
 func LoadEnemy(specs EnemySpecs) {
-	message := fmt.Sprintf("Changing enemy specs. Loading %v", specs.Name)
-	println(message)
+	// message := fmt.Sprintf("Changing enemy specs. Loading %v", specs.Name)
+	// println(message)
 
 	enemy_specs = specs
 }
 
 func enemy_init() {
-	message := fmt.Sprintf("Initializing %v", enemy_specs.Name)
-	println(message)
+	// message := fmt.Sprintf("Initializing %v", enemy_specs.Name)
+	// println(message)
 
 	enemy_is_alive = true
 
@@ -157,13 +156,13 @@ func enemy_respawn() {
 }
 
 func enemy_attack_task(damage int, interval int) {
-	println("Starting enemy attack task...")
+	//println("Starting enemy attack task...")
 	ticker := time.NewTicker(time.Millisecond * time.Duration(interval))
 
 	for {
 		select {
 		case <-enemy_attack_done:
-			println("Stopping enemy attack")
+			//println("Stopping enemy attack")
 			ticker.Stop()
 			return
 		case <-ticker.C:
