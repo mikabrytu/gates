@@ -8,5 +8,5 @@ var Dragon = actors.EnemySpecs{
 	Size:            640,
 	HP:              300,
 	Attack_Interval: 3000,
-	Attack_Damage:   30,
+	Attack_Damage:   15,
 }

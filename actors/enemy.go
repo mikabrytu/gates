@@ -34,12 +34,17 @@ var enemy_attack_done = make(chan bool)
 
 func Enemy() {
 	enemy_init()
-	enemy_respawn()
 
-	events.Subscribe(values.GAME_OVER_EVENT, func(params ...any) error {
-		enemy_stop()
-		return nil
-	})
+	// CRASH: There's a bug with the event system that blocks the main thread when subscribing to more events on this file (maybe package?)
+	// I need to debug the event system to see what's going on
+
+	// enemy_respawn()
+
+	// events.Subscribe(values.GAME_OVER_EVENT, func(params ...any) error {
+	// 	// enemy_stop()
+	// 	println("Waiting for GAME_OVER_EVENT...")
+	// 	return nil
+	// })
 
 	enemy_go = lifecycle.Register(&lifecycle.GameObject{
 		Start: func() {
@@ -70,15 +75,15 @@ func Enemy() {
 }
 
 func LoadEnemy(specs EnemySpecs) {
-	// message := fmt.Sprintf("Changing enemy specs. Loading %v", specs.Name)
-	// println(message)
+	message := fmt.Sprintf("Changing enemy specs. Loading %v", specs.Name)
+	println(message)
 
 	enemy_specs = specs
 }
 
 func enemy_init() {
-	// message := fmt.Sprintf("Initializing %v", enemy_specs.Name)
-	// println(message)
+	message := fmt.Sprintf("Initializing %v", enemy_specs.Name)
+	println(message)
 
 	enemy_is_alive = true
 
@@ -156,13 +161,13 @@ func enemy_respawn() {
 }
 
 func enemy_attack_task(damage int, interval int) {
-	//println("Starting enemy attack task...")
+	println("Starting enemy attack task...")
 	ticker := time.NewTicker(time.Millisecond * time.Duration(interval))
 
 	for {
 		select {
 		case <-enemy_attack_done:
-			//println("Stopping enemy attack")
+			println("Stopping enemy attack")
 			ticker.Stop()
 			return
 		case <-ticker.C:

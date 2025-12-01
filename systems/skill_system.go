@@ -1,5 +1,13 @@
 package systems
 
+type Attribute int
+
+const (
+	STR Attribute = iota
+	INT
+	SPD
+)
+
 type Skill struct {
 	STR     int
 	INT     int

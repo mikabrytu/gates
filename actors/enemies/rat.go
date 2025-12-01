@@ -8,5 +8,5 @@ var Rat = actors.EnemySpecs{
 	Size:            516,
 	HP:              50,
 	Attack_Interval: 3000,
-	Attack_Damage:   5,
+	Attack_Damage:   1,
 }

@@ -13,9 +13,17 @@ import (
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
+type Weapon struct {
+	Name     string
+	Damage   int
+	Recovery int
+	Modifier systems.Attribute
+}
+
 var player_sprite *render.Sprite
 var player_health *systems.Health
 var player_skills *systems.Skill
+var player_current_weapon Weapon
 var player_weapon_rect utils.RectSpecs
 var player_hp_rect utils.RectSpecs
 var player_max_hp int
@@ -68,7 +76,12 @@ func Player() {
 
 func PlayerLevelUp() {
 	player_can_level_up = true
-	println("LEVEL UP. Select 1 to increase STR, 2 to increase INT and 3 to increase SPD")
+	println(values.Blue + "LEVEL UP. Select 1 to increase STR, 2 to increase INT and 3 to increase SPD" + values.Reset)
+}
+
+func PlayerLoadWeapon(weapon Weapon) {
+	player_current_weapon = weapon
+	println(fmt.Sprintf("Player weapon loaded: %s", weapon.Name))
 }
 
 func player_init() {
@@ -98,15 +111,24 @@ func player_init() {
 
 	player_health = systems.InitHealth(player_max_hp)
 	player_skills = systems.NewSkill()
+
+	println("Player initialized")
 }
 
 func player_damage() int {
-	sword := 6
-	//bow := 3
-	//spell_fire := 10
+	weapon := player_current_weapon.Damage
 
-	weapon := sword
-	mod := player_skills.STR
+	mod := 1
+	switch player_current_weapon.Modifier {
+	case systems.STR:
+		mod = player_skills.STR
+	case systems.INT:
+		mod = player_skills.INT
+	case systems.SPD:
+		mod = player_skills.SPD
+	default:
+		println("Couldn't find match between weapon attribute and player skills. Defaulting mod to 1...")
+	}
 
 	dice_roll := rand.IntN(weapon-(weapon/2)) + (weapon / 2)
 	var damage int = dice_roll + (player_skills.STR * mod)
@@ -128,8 +150,12 @@ func player_click_listener() {
 	player_sprite.UpdateRect(temp_rect)
 
 	// Recovery delay
-	time.AfterFunc(time.Millisecond*500, func() {
+	time.AfterFunc(time.Millisecond*time.Duration(player_current_weapon.Recovery), func() {
 		player_can_attack = true
+	})
+
+	// Weapon animation
+	time.AfterFunc(time.Millisecond*350, func() {
 		player_sprite.UpdateRect(player_weapon_rect)
 	})
 }

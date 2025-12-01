@@ -8,5 +8,5 @@ var Skeleton = actors.EnemySpecs{
 	Size:            512,
 	HP:              100,
 	Attack_Interval: 1500,
-	Attack_Damage:   15,
+	Attack_Damage:   5,
 }
