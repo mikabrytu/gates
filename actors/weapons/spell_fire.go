@@ -7,7 +7,7 @@ import (
 
 var SpellFire = actors.Weapon{
 	Name:     "Fire Spell",
-	Damage:   10000,
-	Recovery: 5,
+	Damage:   10,
+	Recovery: 5000,
 	Modifier: systems.INT,
 }

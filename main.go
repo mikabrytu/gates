@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gates/actors"
 	"gates/actors/enemies"
 	"gates/actors/weapons"
@@ -11,6 +12,9 @@ import (
 	gomesengine "github.com/mikabrytu/gomes-engine"
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
+	"github.com/mikabrytu/gomes-engine/math"
+	"github.com/mikabrytu/gomes-engine/render"
+	"github.com/mikabrytu/gomes-engine/ui"
 )
 
 type GameState int
@@ -23,6 +27,7 @@ const (
 )
 
 var game_state GameState
+var message_font *ui.Font
 var rounds int
 
 func main() {
@@ -31,8 +36,7 @@ func main() {
 
 	settings()
 	listeners()
-
-	println(values.Blue + "Choose your weapon: 1 - Sword | 2 - Fire Spell | 3 - Bow" + values.Reset)
+	show_text_ui()
 
 	game_state = Preparing
 	gomesengine.Run()
@@ -89,7 +93,7 @@ func listeners() {
 
 	game_events.Bus.Subscribe(game_events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
 		if game_state != Running {
-			println(values.Yellow + "Trying to kill an enemy while game is not running. Current state:" + string(game_state) + values.Reset)
+			println(values.Yellow + "Trying to kill an enemy while game is not running. Current state:" + fmt.Sprint(game_state) + values.Reset)
 			return
 		}
 
@@ -109,6 +113,8 @@ func sequence() {
 	println("Sequence called")
 
 	if game_state == Preparing {
+		message_font.UpdateColor(render.Transparent)
+
 		actors.LoadEnemy(enemies.Rat)
 		actors.Enemy()
 		actors.Player()
@@ -131,4 +137,19 @@ func sequence() {
 			Message: "Restarting game!",
 		})
 	}
+}
+
+func show_text_ui() {
+	message := "Choose your weapon: 1 - Sword | 2 - Fire Spell | 3 - Bow"
+	// println(message)
+
+	offset := math.Vector2{X: 0, Y: 0}
+	specs := ui.FontSpecs{
+		Name: "Pixelboy",
+		Path: "assets/fonts/pixeboy-font/Pixeboy-z8XGD.ttf",
+		Size: 32,
+	}
+	message_font = ui.NewFont(specs, values.SCREEN_SIZE)
+	message_font.Init(message, render.Blue, offset)
+	message_font.AlignText(ui.MiddleCenter, offset)
 }
