@@ -2,11 +2,12 @@ package actors
 
 import (
 	"fmt"
+	game_events "gates/events"
 	"gates/systems"
 	"gates/values"
 	"time"
 
-	"github.com/mikabrytu/gomes-engine/events"
+	"github.com/Papiermond/eventbus"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/render"
 	"github.com/mikabrytu/gomes-engine/utils"
@@ -33,32 +34,36 @@ var enemy_is_alive bool = false
 var enemy_attack_done = make(chan bool)
 
 func Enemy() {
-	enemy_init()
-
 	// CRASH: There's a bug with the event system that blocks the main thread when subscribing to more events on this file (maybe package?)
 	// I need to debug the event system to see what's going on
 
-	// enemy_respawn()
+	enemy_init()
+	enemy_respawn()
 
-	// events.Subscribe(values.GAME_OVER_EVENT, func(params ...any) error {
-	// 	// enemy_stop()
-	// 	println("Waiting for GAME_OVER_EVENT...")
-	// 	return nil
-	// })
+	game_events.Bus.Subscribe(game_events.GAME_OVER_EVENT, func(e eventbus.Event) {
+		if !enemy_is_alive {
+			return
+		}
+
+		println(e.(game_events.GameOverEvent).Message)
+		enemy_stop()
+	})
 
 	enemy_go = lifecycle.Register(&lifecycle.GameObject{
 		Start: func() {
 			enemy_sprite.Init()
 
-			events.Subscribe(values.PLAYER_ATTACK_EVENT, func(params ...any) error {
-				damage := params[0].([]any)[0].([]any)[0].(int32)
+			game_events.Bus.Subscribe(game_events.PLAYER_ATTACK_EVENT, func(e eventbus.Event) {
+				if !enemy_is_alive {
+					return
+				}
+
+				damage := e.(game_events.PlayerAttackEvent).Damage
 				enemy_health.TakeDamage(int(damage))
 
 				if enemy_health.GetCurrent() <= 0 {
 					enemy_stop()
 				}
-
-				return nil
 			})
 		},
 		Update: func() {
@@ -137,14 +142,19 @@ func enemy_stop() {
 	enemy_sprite.ClearSprite()
 	lifecycle.Disable(enemy_go)
 
-	events.Emit(values.ENEMY_DEAD_EVENT)
+	go func() {
+		message := values.Yellow + "Enemy " + enemy_specs.Name + " is dead" + values.Reset
+		game_events.Bus.Publish(game_events.EnemyDeadEvent{
+			Message: message,
+		})
+	}()
 }
 
 func enemy_respawn() {
-	events.Subscribe(values.GAME_RESTART_EVENT, func(params ...any) error {
+	game_events.Bus.Subscribe(game_events.GAME_RESTART_EVENT, func(e eventbus.Event) {
 		if enemy_is_alive {
 			println("Enemy is already alive. Skipping respawn")
-			return nil
+			return
 		}
 
 		if enemy_go != nil {
@@ -155,8 +165,6 @@ func enemy_respawn() {
 			enemy_init()
 			lifecycle.Enable(enemy_go)
 		}
-
-		return nil
 	})
 }
 
@@ -171,15 +179,18 @@ func enemy_attack_task(damage int, interval int) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			message := fmt.Sprintf("Enemy attacked with %d damage", damage)
-			println(values.Red + message + values.Reset)
+			message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
+			println(message)
 
 			enemy_render_attack = true
 			time.AfterFunc(time.Millisecond*800, func() {
 				enemy_render_attack = false
 			})
 
-			events.Emit(values.ENEMY_ATTACK_EVENT, int32(damage))
+			game_events.Bus.Publish(game_events.EnemyAttackEvent{
+				Damage:  damage,
+				Message: message,
+			})
 		}
 	}
 }

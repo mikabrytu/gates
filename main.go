@@ -4,8 +4,10 @@ import (
 	"gates/actors"
 	"gates/actors/enemies"
 	"gates/actors/weapons"
+	game_events "gates/events"
 	"gates/values"
 
+	"github.com/Papiermond/eventbus"
 	gomesengine "github.com/mikabrytu/gomes-engine"
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
@@ -25,6 +27,7 @@ var rounds int
 
 func main() {
 	gomesengine.Init("RPG", int32(values.SCREEN_SIZE.X), int32(values.SCREEN_SIZE.Y))
+	game_events.Init()
 
 	settings()
 	listeners()
@@ -43,6 +46,7 @@ func settings() {
 }
 
 func listeners() {
+	// Engine events
 	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_1, func(params ...any) error {
 		if game_state != Preparing {
 			return nil
@@ -73,12 +77,24 @@ func listeners() {
 		return nil
 	})
 
-	events.Subscribe(values.GAME_OVER_EVENT, func(params ...any) error {
-		game_state = Stopped
+	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_SPACE, func(params ...any) error {
+		sequence()
 		return nil
 	})
 
-	events.Subscribe(values.ENEMY_DEAD_EVENT, func(params ...any) error {
+	// Game events
+	game_events.Bus.Subscribe(game_events.GAME_OVER_EVENT, func(e eventbus.Event) {
+		game_state = Stopped
+	})
+
+	game_events.Bus.Subscribe(game_events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
+		if game_state != Running {
+			println(values.Yellow + "Trying to kill an enemy while game is not running. Current state:" + string(game_state) + values.Reset)
+			return
+		}
+
+		println("MAIN::" + e.(game_events.EnemyDeadEvent).Message)
+
 		game_state = Waiting
 		rounds += 1
 
@@ -86,13 +102,6 @@ func listeners() {
 		if rounds == 2 || rounds == 4 || rounds == 7 {
 			actors.PlayerLevelUp()
 		}
-
-		return nil
-	})
-
-	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_SPACE, func(params ...any) error {
-		sequence()
-		return nil
 	})
 }
 
@@ -100,9 +109,9 @@ func sequence() {
 	println("Sequence called")
 
 	if game_state == Preparing {
-		actors.Player()
 		actors.LoadEnemy(enemies.Rat)
 		actors.Enemy()
+		actors.Player()
 
 		game_state = Running
 		println("Starting game...")
@@ -117,8 +126,9 @@ func sequence() {
 			actors.LoadEnemy(enemies.Dragon)
 		}
 
-		println("Restarting game!")
 		game_state = Running
-		events.Emit(values.GAME_RESTART_EVENT)
+		game_events.Bus.Publish(game_events.GameRestartEvent{
+			Message: "Restarting game!",
+		})
 	}
 }

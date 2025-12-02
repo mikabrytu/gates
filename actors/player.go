@@ -2,11 +2,13 @@ package actors
 
 import (
 	"fmt"
+	game_events "gates/events"
 	"gates/systems"
 	"gates/values"
 	"math/rand/v2"
 	"time"
 
+	"github.com/Papiermond/eventbus"
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/render"
@@ -43,13 +45,6 @@ func Player() {
 				return nil
 			})
 
-			events.Subscribe(values.ENEMY_ATTACK_EVENT, func(params ...any) error {
-				damage := params[0].([]any)[0].([]any)[0].(int32)
-				player_take_damage_listener(int(damage))
-
-				return nil
-			})
-
 			events.Subscribe(events.INPUT_KEYBOARD_PRESSED_1, func(params ...any) error {
 				player_level_up_listener(1)
 				return nil
@@ -63,6 +58,11 @@ func Player() {
 			events.Subscribe(events.INPUT_KEYBOARD_PRESSED_3, func(params ...any) error {
 				player_level_up_listener(3)
 				return nil
+			})
+
+			game_events.Bus.Subscribe(game_events.ENEMY_ATTACK_EVENT, func(e eventbus.Event) {
+				damage := e.(game_events.EnemyAttackEvent).Damage
+				player_take_damage_listener(int(damage))
 			})
 		},
 		Update: func() {
@@ -143,7 +143,9 @@ func player_click_listener() {
 	}
 
 	player_can_attack = false
-	events.Emit(values.PLAYER_ATTACK_EVENT, int32(player_damage()))
+	game_events.Bus.Publish(game_events.PlayerAttackEvent{
+		Damage: player_damage(),
+	})
 
 	temp_rect := player_weapon_rect
 	temp_rect.PosX = (values.SCREEN_SIZE.X / 2) - 128
@@ -164,7 +166,9 @@ func player_take_damage_listener(damage int) {
 	player_health.TakeDamage(damage)
 
 	if player_health.GetCurrent() <= 0 {
-		events.Emit(values.GAME_OVER_EVENT)
+		game_events.Bus.Publish(game_events.GameOverEvent{
+			Message: "Player is dead",
+		})
 	}
 }
 
