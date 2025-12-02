@@ -36,7 +36,7 @@ func main() {
 
 	settings()
 	listeners()
-	show_text_ui()
+	show_weapon_text()
 
 	game_state = Preparing
 	gomesengine.Run()
@@ -52,32 +52,38 @@ func settings() {
 func listeners() {
 	// Engine events
 	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_1, func(params ...any) error {
-		if game_state != Preparing {
-			return nil
+		switch game_state {
+		case Preparing:
+			actors.PlayerLoadWeapon(weapons.Sword)
+			sequence()
+		case Waiting:
+			message_font.UpdateColor(render.Transparent)
 		}
 
-		actors.PlayerLoadWeapon(weapons.Sword)
-		sequence()
 		return nil
 	})
 
 	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_2, func(params ...any) error {
-		if game_state != Preparing {
-			return nil
+		switch game_state {
+		case Preparing:
+			actors.PlayerLoadWeapon(weapons.SpellFire)
+			sequence()
+		case Waiting:
+			message_font.UpdateColor(render.Transparent)
 		}
 
-		actors.PlayerLoadWeapon(weapons.SpellFire)
-		sequence()
 		return nil
 	})
 
 	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_3, func(params ...any) error {
-		if game_state != Preparing {
-			return nil
+		switch game_state {
+		case Preparing:
+			actors.PlayerLoadWeapon(weapons.Bow)
+			sequence()
+		case Waiting:
+			message_font.UpdateColor(render.Transparent)
 		}
 
-		actors.PlayerLoadWeapon(weapons.Bow)
-		sequence()
 		return nil
 	})
 
@@ -105,6 +111,7 @@ func listeners() {
 		// Player Level Up
 		if rounds == 2 || rounds == 4 || rounds == 7 {
 			actors.PlayerLevelUp()
+			show_level_up_text()
 		}
 	})
 }
@@ -139,17 +146,27 @@ func sequence() {
 	}
 }
 
-func show_text_ui() {
+func show_weapon_text() {
 	message := "Choose your weapon: 1 - Sword | 2 - Fire Spell | 3 - Bow"
 	// println(message)
 
-	offset := math.Vector2{X: 0, Y: 0}
 	specs := ui.FontSpecs{
 		Name: "Pixelboy",
 		Path: "assets/fonts/pixeboy-font/Pixeboy-z8XGD.ttf",
 		Size: 32,
 	}
 	message_font = ui.NewFont(specs, values.SCREEN_SIZE)
-	message_font.Init(message, render.Blue, offset)
-	message_font.AlignText(ui.MiddleCenter, offset)
+	message_font.Init(message, render.Blue, math.Vector2{X: 0, Y: 0})
+	message_font.AlignText(ui.MiddleCenter, math.Vector2{X: 0, Y: 0})
+}
+
+func show_level_up_text() {
+	message := "LEVEL UP. Choose a skill to increase: 1 - STR | 2 - INT | 3 - SPD"
+	message_font.UpdatePosition(math.Vector2{
+		X: 0,
+		Y: (values.SCREEN_SIZE.Y / 2) - 16,
+	})
+	message_font.UpdateText(message)
+	message_font.UpdateColor(render.Blue)
+	message_font.AlignText(ui.MiddleCenter, math.Vector2{X: 0, Y: 0})
 }

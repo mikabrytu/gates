@@ -76,7 +76,6 @@ func Player() {
 
 func PlayerLevelUp() {
 	player_can_level_up = true
-	println(values.Blue + "LEVEL UP. Select 1 to increase STR, 2 to increase INT and 3 to increase SPD" + values.Reset)
 }
 
 func PlayerLoadWeapon(weapon Weapon) {
