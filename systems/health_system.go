@@ -29,3 +29,7 @@ func (h *Health) TakeDamage(base int) {
 func (h *Health) GetCurrent() int {
 	return h.current
 }
+
+func (h *Health) GetMax() int {
+	return h.max
+}

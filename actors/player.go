@@ -3,9 +3,9 @@ package actors
 import (
 	"fmt"
 	game_events "gates/events"
+	"gates/math"
 	"gates/systems"
 	"gates/values"
-	"math/rand/v2"
 	"time"
 
 	"github.com/Papiermond/eventbus"
@@ -28,13 +28,18 @@ var player_skills *systems.Skill
 var player_current_weapon Weapon
 var player_weapon_rect utils.RectSpecs
 var player_hp_rect utils.RectSpecs
+var player_recovery_rect utils.RectSpecs
+var player_attack_start_time time.Time
 var player_max_hp int
 var player_max_hp_width int
 var player_can_attack bool = true
 var player_can_level_up = false
+var player_is_attacking = false
 
 func Player() {
 	player_init()
+
+	og_recovery_width := player_recovery_rect.Width
 
 	lifecycle.Register(&lifecycle.GameObject{
 		Start: func() {
@@ -66,10 +71,25 @@ func Player() {
 			})
 		},
 		Update: func() {
-			player_hp_rect.Width = (player_max_hp_width * player_health.GetCurrent()) / player_max_hp
+			player_hp_rect.Width = (player_max_hp_width * player_health.GetCurrent()) / player_health.GetMax()
+
+			if player_is_attacking {
+				elapsed := time.Since(player_attack_start_time).Milliseconds()
+				t := float64(elapsed) / float64(player_current_weapon.Recovery)
+
+				width := math.Lerp(float64(og_recovery_width), 0, t)
+				player_recovery_rect.Width = int(width)
+
+				if t > 1 {
+					t = 1
+					player_is_attacking = false
+					player_recovery_rect.Width = og_recovery_width
+				}
+			}
 		},
 		Render: func() {
 			render.DrawRect(player_hp_rect, render.Green)
+			render.DrawRect(player_recovery_rect, render.Blue)
 		},
 	})
 }
@@ -101,6 +121,10 @@ func player_init() {
 		Height: 24,
 	}
 
+	player_recovery_rect = player_hp_rect
+	player_recovery_rect.PosY -= 24
+	player_recovery_rect.Height = 12
+
 	player_sprite = render.NewSprite(
 		"Player Weapon",
 		"assets/images/dagger.jpg",
@@ -129,8 +153,12 @@ func player_damage() int {
 		println("Couldn't find match between weapon attribute and player skills. Defaulting mod to 1...")
 	}
 
-	dice_roll := rand.IntN(weapon-(weapon/2)) + (weapon / 2)
-	var damage int = dice_roll + (player_skills.STR * mod)
+	var dice_roll int = 0
+	for i := 0; i < player_skills.STR; i++ {
+		dice_roll += math.CalcDamange(weapon, weapon/2)
+	}
+
+	var damage int = dice_roll * mod
 
 	println(values.Green + fmt.Sprintf("Player is dealing %v damage to enemy", damage) + values.Reset)
 	return damage
@@ -142,6 +170,8 @@ func player_click_listener() {
 	}
 
 	player_can_attack = false
+	player_is_attacking = true
+	player_attack_start_time = time.Now()
 	game_events.Bus.Publish(game_events.PlayerAttackEvent{
 		Damage: player_damage(),
 	})
@@ -190,6 +220,7 @@ func player_level_up_listener(skill int) {
 	player_skills.LevelUp(level_up)
 	player_can_level_up = false
 	player_health.Reset()
+	player_health.ChangeMax(player_health.GetMax() + (player_max_hp / 2))
 
 	println(fmt.Sprintf("Player Current Level: %d {STR: %d, INT: %d, SPD: %v} \n",
 		player_skills.GetLevel(),

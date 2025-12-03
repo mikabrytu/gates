@@ -3,6 +3,7 @@ package actors
 import (
 	"fmt"
 	game_events "gates/events"
+	"gates/math"
 	"gates/systems"
 	"gates/values"
 	"time"
@@ -130,7 +131,7 @@ func enemy_init() {
 		enemy_health.Reset()
 	}
 
-	go enemy_attack_task(enemy_specs.Attack_Damage, enemy_specs.Attack_Interval)
+	go enemy_attack_task(enemy_specs.Attack_Interval)
 }
 
 func enemy_stop() {
@@ -168,7 +169,7 @@ func enemy_respawn() {
 	})
 }
 
-func enemy_attack_task(damage int, interval int) {
+func enemy_attack_task(interval int) {
 	println("Starting enemy attack task...")
 	ticker := time.NewTicker(time.Millisecond * time.Duration(interval))
 
@@ -179,6 +180,8 @@ func enemy_attack_task(damage int, interval int) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
+			damage := math.CalcDamange(enemy_specs.Attack_Damage, enemy_specs.Attack_Damage/2)
+
 			message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
 			println(message)
 
