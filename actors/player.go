@@ -75,7 +75,7 @@ func Player() {
 
 			if player_is_attacking {
 				elapsed := time.Since(player_attack_start_time).Milliseconds()
-				t := float64(elapsed) / float64(player_current_weapon.Recovery)
+				t := float64(elapsed) / float64(player_get_recovery())
 
 				width := math.Lerp(float64(og_recovery_width), 0, t)
 				player_recovery_rect.Width = int(width)
@@ -181,7 +181,7 @@ func player_click_listener() {
 	player_sprite.UpdateRect(temp_rect)
 
 	// Recovery delay
-	time.AfterFunc(time.Millisecond*time.Duration(player_current_weapon.Recovery), func() {
+	time.AfterFunc(time.Millisecond*time.Duration(player_get_recovery()), func() {
 		player_can_attack = true
 	})
 
@@ -227,4 +227,8 @@ func player_level_up_listener(skill int) {
 		player_skills.STR,
 		player_skills.INT,
 		player_skills.SPD))
+}
+
+func player_get_recovery() int {
+	return player_current_weapon.Recovery / player_skills.SPD
 }
