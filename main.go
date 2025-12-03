@@ -109,10 +109,8 @@ func listeners() {
 		rounds += 1
 
 		// Player Level Up
-		if rounds == 2 || rounds == 4 || rounds == 7 {
-			actors.PlayerLevelUp()
-			show_level_up_text()
-		}
+		actors.PlayerLevelUp()
+		show_level_up_text()
 	})
 }
 
@@ -131,11 +129,11 @@ func sequence() {
 	}
 
 	if game_state == Waiting {
-		if rounds >= 3 && rounds < 7 {
+		if rounds == 1 {
 			actors.LoadEnemy(enemies.Skeleton)
 		}
 
-		if rounds >= 7 {
+		if rounds == 2 {
 			actors.LoadEnemy(enemies.Dragon)
 		}
 
