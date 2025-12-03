@@ -219,8 +219,8 @@ func player_level_up_listener(skill int) {
 
 	player_skills.LevelUp(level_up)
 	player_can_level_up = false
-	player_health.Reset()
 	player_health.ChangeMax(player_health.GetMax() + (player_max_hp / 2))
+	player_health.Reset()
 
 	println(fmt.Sprintf("Player Current Level: %d {STR: %d, INT: %d, SPD: %v} \n",
 		player_skills.GetLevel(),
