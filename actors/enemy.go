@@ -20,7 +20,7 @@ type EnemySpecs struct {
 	Size            int
 	HP              int
 	Attack_Interval int
-	Attack_Damage   int
+	Attack_Damage   Dice
 }
 
 var enemy_specs EnemySpecs
@@ -180,7 +180,8 @@ func enemy_attack_task(interval int) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			damage := utils1.CalcDamange(enemy_specs.Attack_Damage, enemy_specs.Attack_Damage/2)
+			dice := enemy_specs.Attack_Damage.GetValue()
+			damage := utils1.CalcDamange(dice, dice/2)
 
 			message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
 			println(message)

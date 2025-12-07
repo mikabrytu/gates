@@ -6,6 +6,7 @@ import (
 	"gates/systems"
 	utils1 "gates/utils"
 	"gates/values"
+	"math/rand/v2"
 	"time"
 
 	"github.com/Papiermond/eventbus"
@@ -143,29 +144,54 @@ func player_init() {
 }
 
 func player_damage() int {
-	weapon := player_current_weapon.Damage
+	damage := 0
+	base := player_skills.STR * player_current_weapon.Damage
+	raw_damage := rand.IntN(base-(base/2)) + (base / 2)
 
-	mod := 1
-	switch player_current_weapon.Modifier {
-	case systems.STR:
-		mod = player_skills.STR
-	case systems.INT:
-		mod = player_skills.INT
-	case systems.SPD:
-		mod = player_skills.SPD
-	default:
-		println("Couldn't find match between weapon attribute and player skills. Defaulting mod to 1...")
+	//print(fmt.Sprintf("%sPlayer Raw Damage of %d %s\n", values.Green, raw_damage, values.Reset))
+
+	crit_chance := player_skills.SPD * 10 // TODO: Set this multiplier somewhere else
+	crit_index := rand.IntN(100)
+	crit_hit := crit_index <= crit_chance
+
+	//print(fmt.Sprintf("%sCritical Chance of %d. Dice rolled %d. Was a crit? %v %s\n", values.Green, crit_chance, crit_index, crit_hit, values.Reset))
+
+	crit_damage := 0
+	if crit_hit {
+		crit_damage = (raw_damage * (player_skills.INT * 25)) / 100 // TODO: Set this multiplier somewhere else
+
+		print(fmt.Sprintf("%sCRITICAL HIT! Player is dealing additional %d damage%s\n", values.Green, crit_damage, values.Reset))
 	}
 
-	var dice_roll int = 0
-	for i := 0; i < player_skills.STR; i++ {
-		dice_roll += utils1.CalcDamange(weapon, weapon/2)
-	}
-
-	var damage int = dice_roll * mod
-
-	println(values.Green + fmt.Sprintf("Player is dealing %v damage to enemy", damage) + values.Reset)
+	damage = raw_damage + crit_damage
+	print(fmt.Sprintf("%sPlayer is attacking with %d damage %s\n", values.Green, damage, values.Reset))
 	return damage
+}
+
+func damage_formula_1() {
+	// weapon := player_current_weapon.Damage
+
+	// mod := 1
+	// switch player_current_weapon.Modifier {
+	// case systems.STR:
+	// 	mod = player_skills.STR
+	// case systems.INT:
+	// 	mod = player_skills.INT
+	// case systems.SPD:
+	// 	mod = player_skills.SPD
+	// default:
+	// 	println("Couldn't find match between weapon attribute and player skills. Defaulting mod to 1...")
+	// }
+
+	// var dice_roll int = 0
+	// for i := 0; i < player_skills.STR; i++ {
+	// 	dice_roll += utils1.CalcDamange(weapon, weapon/2)
+	// }
+
+	// var damage int = dice_roll * mod
+
+	// println(values.Green + fmt.Sprintf("Player is dealing %v damage to enemy", damage) + values.Reset)
+	// return damage
 }
 
 func player_click_listener() {
