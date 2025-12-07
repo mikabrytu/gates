@@ -1,4 +1,4 @@
-package math
+package utils
 
 import "math/rand/v2"
 
