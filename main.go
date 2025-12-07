@@ -120,9 +120,9 @@ func sequence() {
 	if game_state == Preparing {
 		message_font.UpdateColor(render.Transparent)
 
+		actors.Player()
 		actors.LoadEnemy(enemies.Rat)
 		actors.Enemy()
-		actors.Player()
 
 		game_state = Running
 		println("Starting game...")
