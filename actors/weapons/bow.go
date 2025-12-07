@@ -6,8 +6,9 @@ import (
 )
 
 var Bow = actors.Weapon{
-	Name:     "Bow",
-	Damage:   3,
-	Recovery: 1500,
-	Modifier: systems.SPD,
+	Name:       "Bow",
+	SpritePath: "assets/images/sprites/sword.png",
+	Damage:     3,
+	Recovery:   1500,
+	Modifier:   systems.SPD,
 }

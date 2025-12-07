@@ -3,23 +3,27 @@ package actors
 import (
 	"fmt"
 	game_events "gates/events"
-	"gates/math"
 	"gates/systems"
+	utils1 "gates/utils"
 	"gates/values"
 	"time"
 
 	"github.com/Papiermond/eventbus"
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
+	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
 type Weapon struct {
-	Name     string
-	Damage   int
-	Recovery int
-	Modifier systems.Attribute
+	Name         string
+	SpritePath   string
+	SpriteSize   math.Vector2
+	SpriteOffset math.Vector2
+	Damage       int
+	Recovery     int
+	Modifier     systems.Attribute
 }
 
 var player_sprite *render.Sprite
@@ -77,7 +81,7 @@ func Player() {
 				elapsed := time.Since(player_attack_start_time).Milliseconds()
 				t := float64(elapsed) / float64(player_get_recovery())
 
-				width := math.Lerp(float64(og_recovery_width), 0, t)
+				width := utils1.Lerp(float64(og_recovery_width), 0, t)
 				player_recovery_rect.Width = int(width)
 
 				if t > 1 {
@@ -108,10 +112,10 @@ func player_init() {
 	player_max_hp_width = 512
 
 	player_weapon_rect = utils.RectSpecs{
-		PosX:   values.SCREEN_SIZE.X - 256 - 64,
-		PosY:   values.SCREEN_SIZE.Y - 512,
-		Width:  256,
-		Height: 512,
+		PosX:   values.SCREEN_SIZE.X - player_current_weapon.SpriteSize.X + player_current_weapon.SpriteOffset.X,
+		PosY:   values.SCREEN_SIZE.Y - player_current_weapon.SpriteSize.Y + player_current_weapon.SpriteOffset.Y,
+		Width:  player_current_weapon.SpriteSize.X,
+		Height: player_current_weapon.SpriteSize.Y,
 	}
 
 	player_hp_rect = utils.RectSpecs{
@@ -127,7 +131,7 @@ func player_init() {
 
 	player_sprite = render.NewSprite(
 		"Player Weapon",
-		"assets/images/dagger.jpg",
+		player_current_weapon.SpritePath,
 		player_weapon_rect,
 		render.Transparent,
 	)
@@ -155,7 +159,7 @@ func player_damage() int {
 
 	var dice_roll int = 0
 	for i := 0; i < player_skills.STR; i++ {
-		dice_roll += math.CalcDamange(weapon, weapon/2)
+		dice_roll += utils1.CalcDamange(weapon, weapon/2)
 	}
 
 	var damage int = dice_roll * mod
@@ -177,7 +181,7 @@ func player_click_listener() {
 	})
 
 	temp_rect := player_weapon_rect
-	temp_rect.PosX = (values.SCREEN_SIZE.X / 2) - 128
+	temp_rect.PosX = (values.SCREEN_SIZE.X / 2) - (player_current_weapon.SpriteSize.X / 2)
 	player_sprite.UpdateRect(temp_rect)
 
 	// Recovery delay

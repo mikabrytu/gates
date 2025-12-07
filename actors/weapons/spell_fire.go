@@ -6,8 +6,9 @@ import (
 )
 
 var SpellFire = actors.Weapon{
-	Name:     "Fire Spell",
-	Damage:   10,
-	Recovery: 5000,
-	Modifier: systems.INT,
+	Name:       "Fire Spell",
+	SpritePath: "assets/images/sprites/sword.png",
+	Damage:     10,
+	Recovery:   5000,
+	Modifier:   systems.INT,
 }
