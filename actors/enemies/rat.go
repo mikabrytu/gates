@@ -4,7 +4,7 @@ import "gates/actors"
 
 var Rat = actors.EnemySpecs{
 	Name:            "Rat",
-	Image_Path:      "assets/images/rat.png",
+	Image_Path:      "assets/images/placeholder/rat.png",
 	Size:            516,
 	HP:              20,
 	Attack_Interval: 3000,
