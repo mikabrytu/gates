@@ -3,8 +3,8 @@ package actors
 import (
 	"fmt"
 	game_events "gates/events"
-	"gates/math"
 	"gates/systems"
+	utils1 "gates/utils"
 	"gates/values"
 	"time"
 
@@ -180,7 +180,7 @@ func enemy_attack_task(interval int) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			damage := math.CalcDamange(enemy_specs.Attack_Damage, enemy_specs.Attack_Damage/2)
+			damage := utils1.CalcDamange(enemy_specs.Attack_Damage, enemy_specs.Attack_Damage/2)
 
 			message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
 			println(message)
