@@ -31,6 +31,10 @@ var message_font *ui.Font
 var rounds int
 
 func main() {
+	game()
+}
+
+func game() {
 	gomesengine.Init("RPG", int32(values.SCREEN_SIZE.X), int32(values.SCREEN_SIZE.Y))
 	game_events.Init()
 
@@ -121,7 +125,7 @@ func sequence() {
 		message_font.UpdateColor(render.Transparent)
 
 		actors.Player()
-		actors.LoadEnemy(enemies.Rat)
+		actors.LoadEnemy(enemies.Skeleton)
 		actors.Enemy()
 
 		game_state = Running

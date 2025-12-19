@@ -64,3 +64,7 @@ func (s *Skill) Reset() {
 func (s *Skill) GetLevel() int {
 	return s.current
 }
+
+func (s *Skill) GetTotalSkillPoints() int {
+	return s.STR + s.INT + s.SPD
+}
