@@ -10,7 +10,9 @@ import (
 
 	"github.com/Papiermond/eventbus"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
+	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
+	"github.com/mikabrytu/gomes-engine/ui"
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
@@ -27,6 +29,7 @@ var enemy_specs EnemySpecs
 var enemy_go *lifecycle.GameObject
 var enemy_sprite *render.Sprite
 var enemy_health *systems.Health
+var enemy_damage_ui_text *ui.Font
 var enemy_hp_rect utils.RectSpecs
 var enemt_attack_circle utils.CircleSpecs
 var enemy_hp_max_width int
@@ -61,6 +64,12 @@ func Enemy() {
 
 				damage := e.(game_events.PlayerAttackEvent).Damage
 				enemy_health.TakeDamage(int(damage))
+
+				enemy_damage_ui_text.UpdateText(fmt.Sprint(damage))
+				enemy_damage_ui_text.UpdateColor(render.White)
+				time.AfterFunc(time.Millisecond*1200, func() {
+					enemy_damage_ui_text.UpdateColor(render.Transparent)
+				})
 
 				if enemy_health.GetCurrent() <= 0 {
 					enemy_stop()
@@ -110,6 +119,10 @@ func enemy_init() {
 		PosY:   rect.PosY + rect.Height + 64,
 		Radius: 64,
 	}
+
+	enemy_damage_ui_text = ui.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
+	enemy_damage_ui_text.Init("10", render.Transparent, math.Vector2{0, 0})
+	enemy_damage_ui_text.AlignText(ui.TopCenter, math.Vector2{0, 32})
 
 	if enemy_sprite == nil {
 		enemy_sprite = render.NewSprite(
