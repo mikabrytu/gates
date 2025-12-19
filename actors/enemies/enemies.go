@@ -1,0 +1,95 @@
+package enemies
+
+import "gates/actors"
+
+const SPRITE_SIZE = 512
+
+var Rat = actors.EnemySpecs{
+	Name:            "Rat",
+	Image_Path:      "assets/images/placeholder/rat.png",
+	Size:            SPRITE_SIZE,
+	HP:              8,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{4},
+}
+
+var Wolf = actors.EnemySpecs{
+	Name:            "Wolf",
+	Image_Path:      "",
+	Size:            SPRITE_SIZE,
+	HP:              16,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{6},
+}
+
+var Zombie = actors.EnemySpecs{
+	Name:            "Zombie",
+	Image_Path:      "",
+	Size:            SPRITE_SIZE,
+	HP:              28,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{6, 6},
+}
+
+var Goblin = actors.EnemySpecs{
+	Name:            "Goblin",
+	Image_Path:      "",
+	Size:            SPRITE_SIZE,
+	HP:              38,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{6, 6, 4},
+}
+
+var Skeleton = actors.EnemySpecs{
+	Name:            "Skeleton",
+	Image_Path:      "assets/images/placeholder/skeleton.png",
+	Size:            SPRITE_SIZE,
+	HP:              48,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{6},
+}
+
+var Bandit = actors.EnemySpecs{
+	Name:            "Bandit",
+	Image_Path:      "",
+	Size:            SPRITE_SIZE,
+	HP:              58,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{8, 8, 6},
+}
+
+var Orc = actors.EnemySpecs{
+	Name:            "Orc",
+	Image_Path:      "",
+	Size:            SPRITE_SIZE,
+	HP:              60,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{4, 4, 6, 6, 6},
+}
+
+var Werewolf = actors.EnemySpecs{
+	Name:            "Werewolf",
+	Image_Path:      "",
+	Size:            SPRITE_SIZE,
+	HP:              76,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{8, 8, 6, 6},
+}
+
+var Vampire = actors.EnemySpecs{
+	Name:            "Vampire",
+	Image_Path:      "",
+	Size:            SPRITE_SIZE,
+	HP:              106,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{8, 8, 8, 8},
+}
+
+var Dragon = actors.EnemySpecs{
+	Name:            "Dragon",
+	Image_Path:      "assets/images/placeholder/dragon.png",
+	Size:            SPRITE_SIZE,
+	HP:              180,
+	Attack_Interval: 3000,
+	Attack_Damage:   []int{20, 20, 12},
+}
