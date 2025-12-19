@@ -10,7 +10,7 @@ var Rat = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              8,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{4},
+	Attack_Damage:   4,
 }
 
 var Wolf = actors.EnemySpecs{
@@ -19,7 +19,7 @@ var Wolf = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              16,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{6},
+	Attack_Damage:   6,
 }
 
 var Zombie = actors.EnemySpecs{
@@ -28,7 +28,7 @@ var Zombie = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              28,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{6, 6},
+	Attack_Damage:   12,
 }
 
 var Goblin = actors.EnemySpecs{
@@ -37,7 +37,7 @@ var Goblin = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              38,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{6, 6, 4},
+	Attack_Damage:   16,
 }
 
 var Skeleton = actors.EnemySpecs{
@@ -46,7 +46,7 @@ var Skeleton = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              48,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{6},
+	Attack_Damage:   20,
 }
 
 var Bandit = actors.EnemySpecs{
@@ -55,7 +55,7 @@ var Bandit = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              58,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{8, 8, 6},
+	Attack_Damage:   22,
 }
 
 var Orc = actors.EnemySpecs{
@@ -64,7 +64,7 @@ var Orc = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              60,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{4, 4, 6, 6, 6},
+	Attack_Damage:   26,
 }
 
 var Werewolf = actors.EnemySpecs{
@@ -73,7 +73,7 @@ var Werewolf = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              76,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{8, 8, 6, 6},
+	Attack_Damage:   28,
 }
 
 var Vampire = actors.EnemySpecs{
@@ -82,7 +82,7 @@ var Vampire = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              106,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{8, 8, 8, 8},
+	Attack_Damage:   32,
 }
 
 var Dragon = actors.EnemySpecs{
@@ -91,5 +91,5 @@ var Dragon = actors.EnemySpecs{
 	Size:            SPRITE_SIZE,
 	HP:              180,
 	Attack_Interval: 3000,
-	Attack_Damage:   []int{20, 20, 12},
+	Attack_Damage:   52,
 }
