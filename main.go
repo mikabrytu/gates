@@ -125,7 +125,7 @@ func sequence() {
 		hide_ui_text()
 
 		actors.Player()
-		actors.LoadEnemy(enemies.Skeleton)
+		actors.LoadEnemy(enemies.Rat)
 		actors.Enemy()
 
 		game_state = Running
@@ -133,11 +133,11 @@ func sequence() {
 	}
 
 	if game_state == Waiting {
-		if rounds == 1 {
+		if rounds == 3 {
 			actors.LoadEnemy(enemies.Skeleton)
 		}
 
-		if rounds == 2 {
+		if rounds == 6 {
 			actors.LoadEnemy(enemies.Dragon)
 		}
 
@@ -151,14 +151,8 @@ func sequence() {
 func show_weapon_text() {
 	messages := []string{"Choose your weapon", "1 - Sword", "2 - Fire Spell", "3 - Bow"}
 
-	specs := ui.FontSpecs{
-		Name: "Pixelboy",
-		Path: "assets/fonts/pixeboy-font/Pixeboy-z8XGD.ttf",
-		Size: 32,
-	}
-
 	for i, m := range messages {
-		fonts[i] = ui.NewFont(specs, values.SCREEN_SIZE)
+		fonts[i] = ui.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
 		fonts[i].Init(m, render.Blue, math.Vector2{X: 0, Y: 0})
 		fonts[i].AlignText(ui.MiddleCenter, math.Vector2{X: 0, Y: i * 32})
 	}
