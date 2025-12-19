@@ -27,7 +27,7 @@ const (
 )
 
 var game_state GameState
-var message_font *ui.Font
+var fonts [4]*ui.Font
 var rounds int
 
 func main() {
@@ -61,7 +61,7 @@ func listeners() {
 			actors.PlayerLoadWeapon(weapons.Sword)
 			sequence()
 		case Waiting:
-			message_font.UpdateColor(render.Transparent)
+			hide_ui_text()
 		}
 
 		return nil
@@ -73,7 +73,7 @@ func listeners() {
 			actors.PlayerLoadWeapon(weapons.SpellFire)
 			sequence()
 		case Waiting:
-			message_font.UpdateColor(render.Transparent)
+			hide_ui_text()
 		}
 
 		return nil
@@ -85,7 +85,7 @@ func listeners() {
 			actors.PlayerLoadWeapon(weapons.Bow)
 			sequence()
 		case Waiting:
-			message_font.UpdateColor(render.Transparent)
+			hide_ui_text()
 		}
 
 		return nil
@@ -122,7 +122,7 @@ func sequence() {
 	println("Sequence called")
 
 	if game_state == Preparing {
-		message_font.UpdateColor(render.Transparent)
+		hide_ui_text()
 
 		actors.Player()
 		actors.LoadEnemy(enemies.Skeleton)
@@ -149,26 +149,36 @@ func sequence() {
 }
 
 func show_weapon_text() {
-	message := "Choose your weapon: 1 - Sword | 2 - Fire Spell | 3 - Bow"
-	// println(message)
+	messages := []string{"Choose your weapon", "1 - Sword", "2 - Fire Spell", "3 - Bow"}
 
 	specs := ui.FontSpecs{
 		Name: "Pixelboy",
 		Path: "assets/fonts/pixeboy-font/Pixeboy-z8XGD.ttf",
 		Size: 32,
 	}
-	message_font = ui.NewFont(specs, values.SCREEN_SIZE)
-	message_font.Init(message, render.Blue, math.Vector2{X: 0, Y: 0})
-	message_font.AlignText(ui.MiddleCenter, math.Vector2{X: 0, Y: 0})
+
+	for i, m := range messages {
+		fonts[i] = ui.NewFont(specs, values.SCREEN_SIZE)
+		fonts[i].Init(m, render.Blue, math.Vector2{X: 0, Y: 0})
+		fonts[i].AlignText(ui.MiddleCenter, math.Vector2{X: 0, Y: i * 32})
+	}
 }
 
 func show_level_up_text() {
-	message := "LEVEL UP. Choose a skill to increase: 1 - STR | 2 - INT | 3 - SPD"
-	message_font.UpdatePosition(math.Vector2{
-		X: 0,
-		Y: (values.SCREEN_SIZE.Y / 2) - 16,
-	})
-	message_font.UpdateText(message)
-	message_font.UpdateColor(render.Blue)
-	message_font.AlignText(ui.MiddleCenter, math.Vector2{X: 0, Y: 0})
+	messages := []string{"LEVEL UP. Choose a skill to increase", "1 - STR", "2 - INT", "3 - SPD"}
+	for i, m := range messages {
+		fonts[i].UpdatePosition(math.Vector2{
+			X: 0,
+			Y: (values.SCREEN_SIZE.Y / 2) - 16,
+		})
+		fonts[i].UpdateText(m)
+		fonts[i].UpdateColor(render.Blue)
+		fonts[i].AlignText(ui.MiddleCenter, math.Vector2{X: 0, Y: i * 32})
+	}
+}
+
+func hide_ui_text() {
+	for _, f := range fonts {
+		f.UpdateColor(render.Transparent)
+	}
 }
