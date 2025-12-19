@@ -109,7 +109,6 @@ func PlayerLoadWeapon(weapon Weapon) {
 }
 
 func player_init() {
-	player_max_hp = 100
 	player_max_hp_width = 512
 
 	player_weapon_rect = utils.RectSpecs{
@@ -137,10 +136,12 @@ func player_init() {
 		render.Transparent,
 	)
 
-	player_health = systems.InitHealth(player_max_hp)
+	//player_max_hp = 1000
 	player_skills = systems.NewSkill()
+	player_max_hp = 3 * player_skills.GetTotalSkillPoints()
+	player_health = systems.InitHealth(player_max_hp)
 
-	println("Player initialized")
+	print(fmt.Sprintf("Player initialized with %d health\n", player_health.GetCurrent()))
 }
 
 func player_damage() int {
@@ -166,32 +167,6 @@ func player_damage() int {
 	damage = raw_damage + crit_damage
 	print(fmt.Sprintf("%sPlayer is attacking with %d damage %s\n", values.Green, damage, values.Reset))
 	return damage
-}
-
-func damage_formula_1() {
-	// weapon := player_current_weapon.Damage
-
-	// mod := 1
-	// switch player_current_weapon.Modifier {
-	// case systems.STR:
-	// 	mod = player_skills.STR
-	// case systems.INT:
-	// 	mod = player_skills.INT
-	// case systems.SPD:
-	// 	mod = player_skills.SPD
-	// default:
-	// 	println("Couldn't find match between weapon attribute and player skills. Defaulting mod to 1...")
-	// }
-
-	// var dice_roll int = 0
-	// for i := 0; i < player_skills.STR; i++ {
-	// 	dice_roll += utils1.CalcDamange(weapon, weapon/2)
-	// }
-
-	// var damage int = dice_roll * mod
-
-	// println(values.Green + fmt.Sprintf("Player is dealing %v damage to enemy", damage) + values.Reset)
-	// return damage
 }
 
 func player_click_listener() {
