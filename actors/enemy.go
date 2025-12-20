@@ -31,7 +31,6 @@ var enemy_sprite *render.Sprite
 var enemy_health *systems.Health
 var enemy_damage_ui_text *ui.Font
 var enemy_hp_rect utils.RectSpecs
-var enemt_attack_circle utils.CircleSpecs
 var enemy_hp_max_width int
 var enemy_render_attack bool = false
 var enemy_is_alive bool = false
@@ -64,11 +63,15 @@ func Enemy() {
 
 				damage := e.(game_events.PlayerAttackEvent).Damage
 				enemy_health.TakeDamage(int(damage))
+				enemy_scale(-1)
 
 				enemy_damage_ui_text.UpdateText(fmt.Sprint(damage))
 				enemy_damage_ui_text.UpdateColor(render.White)
 				time.AfterFunc(time.Millisecond*1200, func() {
 					enemy_damage_ui_text.UpdateColor(render.Transparent)
+				})
+				time.AfterFunc(time.Millisecond*400, func() {
+					enemy_scale(1)
 				})
 
 				if enemy_health.GetCurrent() <= 0 {
@@ -81,10 +84,6 @@ func Enemy() {
 		},
 		Render: func() {
 			render.DrawRect(enemy_hp_rect, render.Red)
-
-			if enemy_render_attack {
-				render.DrawCircle(enemt_attack_circle, render.Red)
-			}
 		},
 	})
 }
@@ -114,15 +113,9 @@ func enemy_init() {
 	enemy_hp_rect.PosY -= 24
 	enemy_hp_rect.Height = 16
 
-	enemt_attack_circle = utils.CircleSpecs{
-		PosX:   values.SCREEN_SIZE.X / 2,
-		PosY:   rect.PosY + rect.Height + 64,
-		Radius: 64,
-	}
-
 	enemy_damage_ui_text = ui.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
-	enemy_damage_ui_text.Init("10", render.Transparent, math.Vector2{0, 0})
-	enemy_damage_ui_text.AlignText(ui.TopCenter, math.Vector2{0, 32})
+	enemy_damage_ui_text.Init("10", render.Transparent, math.Vector2{X: 0, Y: 0})
+	enemy_damage_ui_text.AlignText(ui.TopCenter, math.Vector2{X: 0, Y: 32})
 
 	if enemy_sprite == nil {
 		enemy_sprite = render.NewSprite(
@@ -200,8 +193,11 @@ func enemy_attack_task(interval int) {
 			println(message)
 
 			enemy_render_attack = true
-			time.AfterFunc(time.Millisecond*800, func() {
+			enemy_scale(1)
+
+			time.AfterFunc(time.Millisecond*400, func() {
 				enemy_render_attack = false
+				enemy_scale(-1)
 			})
 
 			game_events.Bus.Publish(game_events.EnemyAttackEvent{
@@ -210,4 +206,13 @@ func enemy_attack_task(interval int) {
 			})
 		}
 	}
+}
+
+func enemy_scale(direction int) {
+	sprite_rect := enemy_sprite.GetRect()
+	sprite_rect.PosX -= 64 * direction
+	sprite_rect.PosY -= 64 * direction
+	sprite_rect.Width += 128 * direction
+	sprite_rect.Height += 128 * direction
+	enemy_sprite.UpdateRect(sprite_rect)
 }
