@@ -62,6 +62,7 @@ func listeners() {
 			sequence()
 		case Waiting:
 			hide_ui_text()
+			show_continue_message()
 		}
 
 		return nil
@@ -74,6 +75,7 @@ func listeners() {
 			sequence()
 		case Waiting:
 			hide_ui_text()
+			show_continue_message()
 		}
 
 		return nil
@@ -86,6 +88,7 @@ func listeners() {
 			sequence()
 		case Waiting:
 			hide_ui_text()
+			show_continue_message()
 		}
 
 		return nil
@@ -116,6 +119,8 @@ func listeners() {
 		if rounds == 1 || rounds == 3 || rounds == 4 || rounds == 6 {
 			actors.PlayerLevelUp()
 			show_level_up_text()
+		} else {
+			show_continue_message()
 		}
 	})
 }
@@ -135,6 +140,8 @@ func sequence() {
 	}
 
 	if game_state == Waiting {
+		hide_ui_text()
+
 		if rounds == 3 {
 			actors.LoadEnemy(enemies.Skeleton)
 		}
@@ -163,10 +170,6 @@ func show_weapon_text() {
 func show_level_up_text() {
 	messages := []string{"LEVEL UP. Choose a skill to increase", "1 - STR", "2 - INT", "3 - SPD"}
 	for i, m := range messages {
-		fonts[i].UpdatePosition(math.Vector2{
-			X: 0,
-			Y: (values.SCREEN_SIZE.Y / 2) - 16,
-		})
 		fonts[i].UpdateText(m)
 		fonts[i].UpdateColor(render.Blue)
 		fonts[i].AlignText(ui.MiddleCenter, math.Vector2{X: 0, Y: i * 32})
@@ -177,4 +180,9 @@ func hide_ui_text() {
 	for _, f := range fonts {
 		f.UpdateColor(render.Transparent)
 	}
+}
+
+func show_continue_message() {
+	fonts[0].UpdateText("Enemy is dead. Press SPACE to continue...")
+	fonts[0].UpdateColor(render.Blue)
 }
