@@ -32,7 +32,6 @@ var enemy_health *systems.Health
 var enemy_damage_ui_text *ui.Font
 var enemy_hp_rect utils.RectSpecs
 var enemy_hp_max_width int
-var enemy_render_attack bool = false
 var enemy_is_alive bool = false
 var enemy_attack_done = make(chan bool)
 
@@ -192,11 +191,8 @@ func enemy_attack_task(interval int) {
 			message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
 			println(message)
 
-			enemy_render_attack = true
 			enemy_scale(1)
-
 			time.AfterFunc(time.Millisecond*400, func() {
-				enemy_render_attack = false
 				enemy_scale(-1)
 			})
 

@@ -43,6 +43,8 @@ var player_can_attack bool = true
 var player_can_level_up = false
 var player_is_attacking = false
 
+const PLAYER_HP_PER_LEVEL int = 5
+
 func Player() {
 	player_init()
 
@@ -140,7 +142,7 @@ func player_init() {
 
 	//player_max_hp = 1000
 	player_skills = systems.NewSkill()
-	player_max_hp = 3 * player_skills.GetTotalSkillPoints()
+	player_max_hp = PLAYER_HP_PER_LEVEL * player_skills.GetTotalSkillPoints()
 	player_health = systems.InitHealth(player_max_hp)
 
 	print(fmt.Sprintf("Player initialized with %d health\n", player_health.GetCurrent()))
