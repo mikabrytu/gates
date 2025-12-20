@@ -155,7 +155,7 @@ func player_init() {
 func player_damage() int {
 	damage := 0
 	base := player_skills.STR * player_current_weapon.Damage
-	raw_damage := rand.IntN(base-(base/2)) + (base / 2)
+	raw_damage := utils1.CalcDamange(base, base/2)
 
 	//print(fmt.Sprintf("%sPlayer Raw Damage of %d %s\n", values.Green, raw_damage, values.Reset))
 

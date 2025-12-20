@@ -113,8 +113,10 @@ func listeners() {
 		rounds += 1
 
 		// Player Level Up
-		actors.PlayerLevelUp()
-		show_level_up_text()
+		if rounds == 1 || rounds == 3 || rounds == 4 || rounds == 6 {
+			actors.PlayerLevelUp()
+			show_level_up_text()
+		}
 	})
 }
 
