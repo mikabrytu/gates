@@ -116,7 +116,7 @@ func listeners() {
 		rounds += 1
 
 		// Player Level Up
-		if rounds == 1 || rounds == 6 {
+		if rounds == 1 || rounds == 4 || rounds == 7 || rounds == 13 || rounds == 19 || rounds == 22 || rounds == 25 {
 			actors.PlayerLevelUp()
 			show_level_up_text()
 		} else {
@@ -148,6 +148,30 @@ func sequence() {
 
 		if rounds == 6 {
 			actors.LoadEnemy(enemies.Zombie)
+		}
+
+		if rounds == 9 {
+			actors.LoadEnemy(enemies.Goblin)
+		}
+
+		if rounds == 12 {
+			actors.LoadEnemy(enemies.Skeleton)
+		}
+
+		if rounds == 15 {
+			actors.LoadEnemy(enemies.Bandit)
+		}
+
+		if rounds == 18 {
+			actors.LoadEnemy(enemies.Orc)
+		}
+
+		if rounds == 21 {
+			actors.LoadEnemy(enemies.Werewolf)
+		}
+
+		if rounds == 24 {
+			actors.LoadEnemy(enemies.Vampire)
 		}
 
 		game_state = Running
