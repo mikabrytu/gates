@@ -19,7 +19,7 @@ var Wolf = actors.EnemySpecs{
 	Image_Path:      "assets/images/sprites/wolf.png",
 	Size:            SPRITE_SIZE,
 	HP:              16,
-	Attack_Interval: BASE_INTERVAL,
+	Attack_Interval: 2000,
 	Attack_Damage:   6,
 }
 
@@ -28,61 +28,61 @@ var Zombie = actors.EnemySpecs{
 	Image_Path:      "assets/images/sprites/zombie.png",
 	Size:            SPRITE_SIZE,
 	HP:              28,
-	Attack_Interval: BASE_INTERVAL,
+	Attack_Interval: 2000,
 	Attack_Damage:   12,
 }
 
 var Goblin = actors.EnemySpecs{
 	Name:            "Goblin",
-	Image_Path:      "",
+	Image_Path:      "assets/images/sprites/goblin.png",
 	Size:            SPRITE_SIZE,
 	HP:              38,
-	Attack_Interval: BASE_INTERVAL,
+	Attack_Interval: 2000,
 	Attack_Damage:   16,
 }
 
 var Skeleton = actors.EnemySpecs{
 	Name:            "Skeleton",
-	Image_Path:      "assets/images/placeholder/skeleton.png",
+	Image_Path:      "assets/images/sprites/skeleton.png",
 	Size:            SPRITE_SIZE,
 	HP:              48,
-	Attack_Interval: BASE_INTERVAL,
+	Attack_Interval: 1750,
 	Attack_Damage:   20,
 }
 
 var Bandit = actors.EnemySpecs{
 	Name:            "Bandit",
-	Image_Path:      "",
+	Image_Path:      "assets/images/sprites/bandit.png",
 	Size:            SPRITE_SIZE,
 	HP:              58,
-	Attack_Interval: BASE_INTERVAL,
+	Attack_Interval: 1500,
 	Attack_Damage:   22,
 }
 
 var Orc = actors.EnemySpecs{
 	Name:            "Orc",
-	Image_Path:      "",
+	Image_Path:      "assets/images/sprites/orc.png",
 	Size:            SPRITE_SIZE,
 	HP:              60,
-	Attack_Interval: BASE_INTERVAL,
+	Attack_Interval: 1200,
 	Attack_Damage:   26,
 }
 
 var Werewolf = actors.EnemySpecs{
 	Name:            "Werewolf",
-	Image_Path:      "",
+	Image_Path:      "assets/images/sprites/werewolf.png",
 	Size:            SPRITE_SIZE,
 	HP:              76,
-	Attack_Interval: BASE_INTERVAL,
+	Attack_Interval: 1000,
 	Attack_Damage:   28,
 }
 
 var Vampire = actors.EnemySpecs{
 	Name:            "Vampire",
-	Image_Path:      "",
+	Image_Path:      "assets/images/sprites/vampire.png",
 	Size:            SPRITE_SIZE,
 	HP:              106,
-	Attack_Interval: BASE_INTERVAL,
+	Attack_Interval: 750,
 	Attack_Damage:   32,
 }
 
