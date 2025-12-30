@@ -4,7 +4,7 @@ go 1.25.2
 
 require (
 	github.com/Papiermond/eventbus v0.1.1
-	github.com/mikabrytu/gomes-engine v1.3.7-dev
+	github.com/mikabrytu/gomes-engine v1.3.8-dev
 )
 
 require (

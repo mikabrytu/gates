@@ -4,8 +4,8 @@ github.com/Papiermond/eventbus v0.1.1 h1:GX60yXSOd1JpvqrkDZrNGMKZkEoeAQR7csp9xqZ
 github.com/Papiermond/eventbus v0.1.1/go.mod h1:qff5qExeWJONFq+GzqbRfD3OZhNucoek4eIVNOYjiDs=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/mikabrytu/gomes-engine v1.3.7-dev h1:RmUCyzgSu6zqjYSlQtDA889WcrT1LJ8J5eVtHDvvDlg=
-github.com/mikabrytu/gomes-engine v1.3.7-dev/go.mod h1:bJXha5hvm0aU2cvBe0Iebo6tRlrJ+UXfvzcFBv/x10o=
+github.com/mikabrytu/gomes-engine v1.3.8-dev h1:DQspiZsxze3Swhgc90KFVZYBof65KLyET/LYciYLhDg=
+github.com/mikabrytu/gomes-engine v1.3.8-dev/go.mod h1:bJXha5hvm0aU2cvBe0Iebo6tRlrJ+UXfvzcFBv/x10o=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
