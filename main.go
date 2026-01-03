@@ -47,15 +47,14 @@ func game() {
 }
 
 func settings() {
-	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_ESCAPE, func(params ...any) error {
+	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_ESCAPE, func(data any) {
 		lifecycle.Kill()
-		return nil
 	})
 }
 
 func listeners() {
 	// Engine events
-	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_1, func(params ...any) error {
+	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_1, func(data any) {
 		switch game_state {
 		case Preparing:
 			actors.PlayerLoadWeapon(weapons.Sword)
@@ -64,11 +63,9 @@ func listeners() {
 			hide_ui_text()
 			show_continue_message()
 		}
-
-		return nil
 	})
 
-	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_2, func(params ...any) error {
+	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_2, func(data any) {
 		switch game_state {
 		case Preparing:
 			actors.PlayerLoadWeapon(weapons.SpellFire)
@@ -77,11 +74,9 @@ func listeners() {
 			hide_ui_text()
 			show_continue_message()
 		}
-
-		return nil
 	})
 
-	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_3, func(params ...any) error {
+	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_3, func(data any) {
 		switch game_state {
 		case Preparing:
 			actors.PlayerLoadWeapon(weapons.Bow)
@@ -90,13 +85,10 @@ func listeners() {
 			hide_ui_text()
 			show_continue_message()
 		}
-
-		return nil
 	})
 
-	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_SPACE, func(params ...any) error {
+	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_SPACE, func(data any) {
 		sequence()
-		return nil
 	})
 
 	// Game events
