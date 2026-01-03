@@ -6,7 +6,6 @@ import (
 	"gates/systems"
 	utils1 "gates/utils"
 	"gates/values"
-	"math/rand/v2"
 	"time"
 
 	"github.com/Papiermond/eventbus"
@@ -155,27 +154,18 @@ func player_init() {
 }
 
 func player_damage() int {
-	damage := 0
-	base := player_skills.STR * player_current_weapon.Damage
-	raw_damage := utils1.CalcDamange(base, base/2)
-
-	//print(fmt.Sprintf("%sPlayer Raw Damage of %d %s\n", values.Green, raw_damage, values.Reset))
-
-	crit_chance := player_skills.SPD * 10 // TODO: Set this multiplier somewhere else
-	crit_index := rand.IntN(100)
-	crit_hit := crit_index <= crit_chance
-
-	//print(fmt.Sprintf("%sCritical Chance of %d. Dice rolled %d. Was a crit? %v %s\n", values.Green, crit_chance, crit_index, crit_hit, values.Reset))
-
-	crit_damage := 0
-	if crit_hit {
-		crit_damage = (raw_damage * (player_skills.INT * 25)) / 100 // TODO: Set this multiplier somewhere else
-
-		print(fmt.Sprintf("%sCRITICAL HIT! Player is dealing additional %d damage%s\n", values.Green, crit_damage, values.Reset))
+	mod := 1
+	switch player_current_weapon.Modifier {
+	case systems.STR:
+		mod = player_skills.STR
+	case systems.INT:
+		mod = player_skills.INT
+	case systems.SPD:
+		mod = player_skills.SPD
 	}
 
-	damage = raw_damage + crit_damage
-	print(fmt.Sprintf("%sPlayer is attacking with %d damage %s\n", values.Green, damage, values.Reset))
+	damage := player_current_weapon.Damage * mod
+
 	return damage
 }
 
@@ -206,7 +196,13 @@ func player_click_listener() {
 	})
 }
 
-func player_take_damage_listener(damage int) {
+func player_take_damage_listener(base_damage int) {
+	raw_damage := base_damage / player_skills.STR
+	damage := utils1.CalcDamange(raw_damage, raw_damage/2)
+
+	message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
+	println(message)
+
 	player_health.TakeDamage(damage)
 
 	player_damage_ui_text.UpdateText(fmt.Sprint(damage))
@@ -252,4 +248,29 @@ func player_level_up_listener(skill int) {
 
 func player_get_recovery() int {
 	return player_current_weapon.Recovery / player_skills.SPD
+}
+
+func old_math() {
+	// damage := 0
+	// base := player_skills.STR * player_current_weapon.Damage
+	// raw_damage := utils1.CalcDamange(base, base/2)
+
+	// //print(fmt.Sprintf("%sPlayer Raw Damage of %d %s\n", values.Green, raw_damage, values.Reset))
+
+	// crit_chance := player_skills.SPD * 10 // TODO: Set this multiplier somewhere else
+	// crit_index := rand.IntN(100)
+	// crit_hit := crit_index <= crit_chance
+
+	// //print(fmt.Sprintf("%sCritical Chance of %d. Dice rolled %d. Was a crit? %v %s\n", values.Green, crit_chance, crit_index, crit_hit, values.Reset))
+
+	// crit_damage := 0
+	// if crit_hit {
+	// 	crit_damage = (raw_damage * (player_skills.INT * 25)) / 100 // TODO: Set this multiplier somewhere else
+
+	// 	print(fmt.Sprintf("%sCRITICAL HIT! Player is dealing additional %d damage%s\n", values.Green, crit_damage, values.Reset))
+	// }
+
+	// damage = raw_damage + crit_damage
+	// print(fmt.Sprintf("%sPlayer is attacking with %d damage %s\n", values.Green, damage, values.Reset))
+	// return damage
 }

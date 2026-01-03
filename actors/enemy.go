@@ -23,6 +23,7 @@ type EnemySpecs struct {
 	HP              int
 	Attack_Interval int
 	Attack_Damage   int
+	Defense         int
 }
 
 var enemy_specs EnemySpecs
@@ -56,26 +57,7 @@ func Enemy() {
 			enemy_sprite.Init()
 
 			game_events.Bus.Subscribe(game_events.PLAYER_ATTACK_EVENT, func(e eventbus.Event) {
-				if !enemy_is_alive {
-					return
-				}
-
-				damage := e.(game_events.PlayerAttackEvent).Damage
-				enemy_health.TakeDamage(int(damage))
-				enemy_scale(-1)
-
-				enemy_damage_ui_text.UpdateText(fmt.Sprint(damage))
-				enemy_damage_ui_text.UpdateColor(render.White)
-				time.AfterFunc(time.Millisecond*1200, func() {
-					enemy_damage_ui_text.UpdateColor(render.Transparent)
-				})
-				time.AfterFunc(time.Millisecond*400, func() {
-					enemy_scale(1)
-				})
-
-				if enemy_health.GetCurrent() <= 0 {
-					enemy_stop()
-				}
+				enemy_take_damage(e.(game_events.PlayerAttackEvent).Damage)
 			})
 		},
 		Update: func() {
@@ -174,6 +156,33 @@ func enemy_respawn() {
 	})
 }
 
+func enemy_take_damage(player_damage int) {
+	if !enemy_is_alive {
+		return
+	}
+
+	raw := player_damage / enemy_specs.Defense
+	damage := utils1.CalcDamange(raw, raw/2)
+
+	print(fmt.Sprintf("%sPlayer is attacking with %d damage %s\n", values.Green, damage, values.Reset))
+
+	enemy_health.TakeDamage(int(damage))
+	enemy_scale(-1)
+
+	enemy_damage_ui_text.UpdateText(fmt.Sprint(damage))
+	enemy_damage_ui_text.UpdateColor(render.White)
+	time.AfterFunc(time.Millisecond*1200, func() {
+		enemy_damage_ui_text.UpdateColor(render.Transparent)
+	})
+	time.AfterFunc(time.Millisecond*400, func() {
+		enemy_scale(1)
+	})
+
+	if enemy_health.GetCurrent() <= 0 {
+		enemy_stop()
+	}
+}
+
 func enemy_attack_task(interval int) {
 	println("Starting enemy attack task...")
 	ticker := time.NewTicker(time.Millisecond * time.Duration(interval))
@@ -185,20 +194,14 @@ func enemy_attack_task(interval int) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			raw_damage := enemy_specs.Attack_Damage
-			damage := utils1.CalcDamange(raw_damage, raw_damage/2)
-
-			message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
-			println(message)
-
+			damage := enemy_specs.Attack_Damage
 			enemy_scale(1)
 			time.AfterFunc(time.Millisecond*400, func() {
 				enemy_scale(-1)
 			})
 
 			game_events.Bus.Publish(game_events.EnemyAttackEvent{
-				Damage:  damage,
-				Message: message,
+				Damage: damage,
 			})
 		}
 	}
