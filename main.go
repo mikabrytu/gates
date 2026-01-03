@@ -119,7 +119,18 @@ func listeners() {
 }
 
 func sequence() {
-	println("Sequence called")
+	state_name := ""
+	switch game_state {
+	case Running:
+		state_name = "Running"
+	case Preparing:
+		state_name = "Preparing"
+	case Waiting:
+		state_name = "Waiting"
+	case Stopped:
+		state_name = "Stopped"
+	}
+	println("Sequence called. Current state is", state_name)
 
 	if game_state == Preparing {
 		hide_ui_text()
@@ -168,9 +179,7 @@ func sequence() {
 		}
 
 		game_state = Running
-		game_events.Bus.Publish(game_events.GameRestartEvent{
-			Message: "Restarting game!",
-		})
+		events.Emit(events.Game, game_events.GameRestartEvent{Message: "Restarting game..."})
 	}
 }
 

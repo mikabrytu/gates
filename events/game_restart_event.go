@@ -7,5 +7,5 @@ type GameRestartEvent struct {
 }
 
 func (e GameRestartEvent) GetType() eventbus.EventType {
-	return GAME_RESTART_EVENT
+	return eventbus.EventType(GAME_RESTART_EVENT)
 }

@@ -33,15 +33,17 @@ var enemy_is_alive bool
 
 func Enemy() {
 	enemy_init()
+	enemy_respawn()
+
+	events.Subscribe(events.Game, game_events.GAME_RESTART_EVENT, func(data any) {
+		restart := data.(game_events.GameRestartEvent)
+		println(values.Red + restart.Message + values.Reset)
+
+		enemy_respawn()
+	})
 
 	enemy_go = lifecycle.Register(&lifecycle.GameObject{
 		Start: func() {
-			enemy_sprite = render.NewSprite(
-				enemy_specs.Name,
-				enemy_specs.Image_Path,
-				enemy_sprite_rect,
-				render.White,
-			)
 			enemy_sprite.Init()
 
 			game_events.Bus.Subscribe(game_events.PLAYER_ATTACK_EVENT, func(e eventbus.Event) {
@@ -77,6 +79,13 @@ func enemy_init() {
 		Height: enemy_specs.Size,
 	}
 
+	enemy_sprite = render.NewSprite(
+		enemy_specs.Name,
+		enemy_specs.Image_Path,
+		enemy_sprite_rect,
+		render.White,
+	)
+
 	enemy_hp_rect = enemy_sprite_rect
 	enemy_hp_rect.PosY -= 24
 	enemy_hp_rect.Height = 16
@@ -85,6 +94,24 @@ func enemy_init() {
 
 	// Init systems
 	enemy_health = systems.InitHealth(enemy_specs.HP)
+}
+
+func enemy_respawn() {
+	if enemy_is_alive {
+		return
+	}
+
+	println(values.Red + enemy_specs.Name + " is respawning" + values.Reset)
+
+	enemy_is_alive = true
+	lifecycle.Enable(enemy_go)
+
+	if enemy_sprite != nil {
+		enemy_sprite.UpdateRect(enemy_sprite_rect)
+		enemy_sprite.UpdateImage(enemy_specs.Image_Path)
+		enemy_sprite.Init()
+		println(values.Red + enemy_specs.Name + " sprite should be visible now" + values.Reset)
+	}
 }
 
 func enemy_takes_damage(damage int) {
