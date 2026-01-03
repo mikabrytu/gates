@@ -186,7 +186,7 @@ func show_weapon_text() {
 
 	for i, m := range messages {
 		fonts[i] = ui.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
-		fonts[i].Init(m, render.Blue, math.Vector2{X: 0, Y: 0})
+		fonts[i].Init(m, render.White, math.Vector2{X: 0, Y: 0})
 		fonts[i].AlignText(ui.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
 	}
 }
@@ -195,7 +195,7 @@ func show_level_up_text() {
 	messages := []string{"LEVEL UP. Choose a skill to increase", "1 - STR", "2 - INT", "3 - SPD"}
 	for i, m := range messages {
 		fonts[i].UpdateText(m)
-		fonts[i].UpdateColor(render.Blue)
+		fonts[i].UpdateColor(render.Yellow)
 		fonts[i].AlignText(ui.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
 	}
 }
