@@ -1,8 +1,10 @@
 package actors
 
 import (
+	game_events "gates/events"
 	"gates/values"
 
+	"github.com/Papiermond/eventbus"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/render"
 	"github.com/mikabrytu/gomes-engine/utils"
@@ -35,6 +37,11 @@ func Enemy() {
 				render.White,
 			)
 			enemy_sprite.Init()
+
+			game_events.Bus.Subscribe(game_events.PLAYER_ATTACK_EVENT, func(e eventbus.Event) {
+				attack := e.(game_events.PlayerAttackEvent)
+				println("Enemy take damage", attack.Damage)
+			})
 		},
 		Render: func() {
 			render.DrawRect(enemy_hp_rect, render.Red)
