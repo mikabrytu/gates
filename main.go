@@ -96,13 +96,14 @@ func listeners() {
 		game_state = Stopped
 	})
 
-	game_events.Bus.Subscribe(game_events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
+	events.Subscribe(events.Game, game_events.ENEMY_DEAD_EVENT, func(data any) {
+		dead := data.(game_events.EnemyDeadEvent)
+		println(values.Yellow + "MAIN::" + dead.Message + values.Reset)
+
 		if game_state != Running {
 			println(values.Yellow + "Trying to kill an enemy while game is not running. Current state:" + fmt.Sprint(game_state) + values.Reset)
 			return
 		}
-
-		println("MAIN::" + e.(game_events.EnemyDeadEvent).Message)
 
 		game_state = Waiting
 		rounds += 1

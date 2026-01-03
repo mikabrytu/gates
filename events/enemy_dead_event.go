@@ -7,5 +7,5 @@ type EnemyDeadEvent struct {
 }
 
 func (e EnemyDeadEvent) GetType() eventbus.EventType {
-	return ENEMY_DEAD_EVENT
+	return eventbus.EventType(ENEMY_DEAD_EVENT)
 }
