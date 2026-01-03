@@ -19,12 +19,23 @@ type EnemySpecs struct {
 }
 
 var enemy_specs EnemySpecs
+var enemy_sprite *render.Sprite
+var enemy_sprite_rect utils.RectSpecs
 var enemy_hp_rect utils.RectSpecs
 
 func Enemy() {
 	enemy_init()
 
 	lifecycle.Register(&lifecycle.GameObject{
+		Start: func() {
+			enemy_sprite = render.NewSprite(
+				enemy_specs.Name,
+				enemy_specs.Image_Path,
+				enemy_sprite_rect,
+				render.White,
+			)
+			enemy_sprite.Init()
+		},
 		Render: func() {
 			render.DrawRect(enemy_hp_rect, render.Red)
 		},
@@ -36,17 +47,20 @@ func LoadEnemy(specs EnemySpecs) {
 }
 
 func enemy_init() {
-	message := "Initializing enemy"
-	println(message)
+	if enemy_specs.Name == "" {
+		panic("Enemy specs not loaded!")
+	}
 
-	rect := utils.RectSpecs{
+	println("Initializing", enemy_specs.Name)
+
+	enemy_sprite_rect = utils.RectSpecs{
 		PosX:   (values.SCREEN_SIZE.X / 2) - (enemy_specs.Size / 2),
 		PosY:   32,
 		Width:  enemy_specs.Size,
 		Height: enemy_specs.Size,
 	}
 
-	enemy_hp_rect = rect
+	enemy_hp_rect = enemy_sprite_rect
 	enemy_hp_rect.PosY -= 24
 	enemy_hp_rect.Height = 16
 }
