@@ -212,9 +212,11 @@ func player_take_damage_listener(base_damage int) {
 	})
 
 	if player_health.GetCurrent() <= 0 {
-		game_events.Bus.Publish(game_events.GameOverEvent{
-			Message: "Player is dead",
-		})
+		// game_events.Bus.Publish(game_events.GameOverEvent{
+		// 	Message: "Player is dead",
+		// })
+
+		lifecycle.Kill()
 	}
 }
 
