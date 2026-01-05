@@ -104,14 +104,8 @@ func enemy_respawn() {
 	println(values.Red + enemy_specs.Name + " is respawning" + values.Reset)
 
 	enemy_is_alive = true
+	enemy_sprite.Enable()
 	lifecycle.Enable(enemy_go)
-
-	if enemy_sprite != nil {
-		enemy_sprite.UpdateRect(enemy_sprite_rect)
-		enemy_sprite.UpdateImage(enemy_specs.Image_Path)
-		enemy_sprite.Init()
-		println(values.Red + enemy_specs.Name + " sprite should be visible now" + values.Reset)
-	}
 }
 
 func enemy_takes_damage(damage int) {
@@ -128,8 +122,7 @@ func enemy_dead() {
 	println(values.Red + enemy_specs.Name + " is dead." + values.Reset)
 
 	enemy_is_alive = false
-	enemy_sprite.ClearSprite()
-
+	enemy_sprite.Disable()
 	lifecycle.Disable(enemy_go)
 
 	events.Emit(events.Game, game_events.EnemyDeadEvent{Message: enemy_specs.Name + " is dead"})
