@@ -53,24 +53,20 @@ func Player() {
 		Start: func() {
 			player_sprite.Init()
 
-			events.Subscribe(events.INPUT_MOUSE_CLICK_DOWN, func(params ...any) error {
+			events.Subscribe(events.Input, events.INPUT_MOUSE_CLICK_DOWN, func(data any) {
 				player_click_listener()
-				return nil
 			})
 
-			events.Subscribe(events.INPUT_KEYBOARD_PRESSED_1, func(params ...any) error {
+			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_1, func(data any) {
 				player_level_up_listener(1)
-				return nil
 			})
 
-			events.Subscribe(events.INPUT_KEYBOARD_PRESSED_2, func(params ...any) error {
+			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_2, func(data any) {
 				player_level_up_listener(2)
-				return nil
 			})
 
-			events.Subscribe(events.INPUT_KEYBOARD_PRESSED_3, func(params ...any) error {
+			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_3, func(data any) {
 				player_level_up_listener(3)
-				return nil
 			})
 
 			game_events.Bus.Subscribe(game_events.ENEMY_ATTACK_EVENT, func(e eventbus.Event) {
