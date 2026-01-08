@@ -74,6 +74,22 @@ func LoadEnemy(specs EnemySpecs) {
 	println(message)
 
 	enemy_specs = specs
+
+	if enemy_sprite != nil {
+		// TODO: Make this re-usable on enemy_init
+		rect := utils.RectSpecs{
+			PosX:   (values.SCREEN_SIZE.X / 2) - (enemy_specs.Size / 2),
+			PosY:   32,
+			Width:  enemy_specs.Size,
+			Height: enemy_specs.Size,
+		}
+
+		enemy_sprite.Enable()
+		enemy_sprite.ClearSprite()
+		enemy_sprite.UpdateImage(enemy_specs.Image_Path)
+		enemy_sprite.UpdateRect(rect)
+		enemy_sprite.Init()
+	}
 }
 
 func enemy_init() {
@@ -106,9 +122,7 @@ func enemy_init() {
 			render.White,
 		)
 	} else {
-		enemy_sprite.UpdateRect(rect)
-		enemy_sprite.UpdateImage(enemy_specs.Image_Path)
-		enemy_sprite.Init()
+		enemy_sprite.Enable()
 	}
 
 	if enemy_health == nil {
@@ -127,7 +141,7 @@ func enemy_stop() {
 	}()
 
 	enemy_is_alive = false
-	enemy_sprite.ClearSprite()
+	enemy_sprite.Disable()
 	lifecycle.Disable(enemy_go)
 
 	go func() {
@@ -208,6 +222,10 @@ func enemy_attack_task(interval int) {
 }
 
 func enemy_scale(direction int) {
+	if !enemy_is_alive {
+		return
+	}
+
 	sprite_rect := enemy_sprite.GetRect()
 	sprite_rect.PosX -= 64 * direction
 	sprite_rect.PosY -= 64 * direction
