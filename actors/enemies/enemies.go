@@ -1,21 +1,29 @@
 package enemies
 
-import "gates/actors"
+type EnemySpecs struct {
+	Name            string
+	Image_Path      string
+	Size            int
+	HP              int
+	Attack_Interval int
+	Attack_Damage   int
+	Defense         int
+}
 
 const SPRITE_SIZE = 512
 const BASE_INTERVAL = 3000
 
-var Rat = actors.EnemySpecs{
+var Rat = EnemySpecs{
 	Name:            "Rat",
 	Image_Path:      "assets/images/sprites/rat.png",
 	Size:            SPRITE_SIZE,
-	HP:              10,
+	HP:              100,
 	Attack_Interval: BASE_INTERVAL,
 	Attack_Damage:   4,
 	Defense:         1,
 }
 
-var Wolf = actors.EnemySpecs{
+var Wolf = EnemySpecs{
 	Name:            "Wolf",
 	Image_Path:      "assets/images/sprites/wolf.png",
 	Size:            SPRITE_SIZE,
@@ -25,7 +33,7 @@ var Wolf = actors.EnemySpecs{
 	Defense:         1,
 }
 
-var Zombie = actors.EnemySpecs{
+var Zombie = EnemySpecs{
 	Name:            "Zombie",
 	Image_Path:      "assets/images/sprites/zombie.png",
 	Size:            SPRITE_SIZE,
@@ -35,7 +43,7 @@ var Zombie = actors.EnemySpecs{
 	Defense:         2,
 }
 
-var Goblin = actors.EnemySpecs{
+var Goblin = EnemySpecs{
 	Name:            "Goblin",
 	Image_Path:      "assets/images/sprites/goblin.png",
 	Size:            SPRITE_SIZE,
@@ -45,7 +53,7 @@ var Goblin = actors.EnemySpecs{
 	Defense:         2,
 }
 
-var Skeleton = actors.EnemySpecs{
+var Skeleton = EnemySpecs{
 	Name:            "Skeleton",
 	Image_Path:      "assets/images/sprites/skeleton.png",
 	Size:            SPRITE_SIZE,
@@ -55,7 +63,7 @@ var Skeleton = actors.EnemySpecs{
 	Defense:         3,
 }
 
-var Bandit = actors.EnemySpecs{
+var Bandit = EnemySpecs{
 	Name:            "Bandit",
 	Image_Path:      "assets/images/sprites/bandit.png",
 	Size:            SPRITE_SIZE,
@@ -65,7 +73,7 @@ var Bandit = actors.EnemySpecs{
 	Defense:         3,
 }
 
-var Orc = actors.EnemySpecs{
+var Orc = EnemySpecs{
 	Name:            "Orc",
 	Image_Path:      "assets/images/sprites/orc.png",
 	Size:            SPRITE_SIZE,
@@ -75,7 +83,7 @@ var Orc = actors.EnemySpecs{
 	Defense:         4,
 }
 
-var Werewolf = actors.EnemySpecs{
+var Werewolf = EnemySpecs{
 	Name:            "Werewolf",
 	Image_Path:      "assets/images/sprites/werewolf.png",
 	Size:            SPRITE_SIZE,
@@ -85,7 +93,7 @@ var Werewolf = actors.EnemySpecs{
 	Defense:         5,
 }
 
-var Vampire = actors.EnemySpecs{
+var Vampire = EnemySpecs{
 	Name:            "Vampire",
 	Image_Path:      "assets/images/sprites/vampire.png",
 	Size:            SPRITE_SIZE,
@@ -95,7 +103,7 @@ var Vampire = actors.EnemySpecs{
 	Defense:         5,
 }
 
-var Dragon = actors.EnemySpecs{
+var Dragon = EnemySpecs{
 	Name:            "Dragon",
 	Image_Path:      "assets/images/placeholder/dragon.png",
 	Size:            SPRITE_SIZE,
