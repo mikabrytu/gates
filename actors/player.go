@@ -2,7 +2,9 @@ package actors
 
 import (
 	"fmt"
+	"gates/actors/weapons"
 	game_events "gates/events"
+	"gates/spells"
 	"gates/systems"
 	utils1 "gates/utils"
 	"gates/values"
@@ -17,21 +19,11 @@ import (
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
-type Weapon struct {
-	Name         string
-	SpritePath   string
-	SpriteSize   math.Vector2
-	SpriteOffset math.Vector2
-	Damage       int
-	Recovery     int
-	Modifier     systems.Attribute
-}
-
 var player_sprite *render.Sprite
 var player_health *systems.Health
 var player_skills *systems.Skill
 var player_damage_ui_text *render.Font
-var player_current_weapon Weapon
+var player_current_weapon weapons.Weapon
 var player_weapon_rect utils.RectSpecs
 var player_hp_rect utils.RectSpecs
 var player_recovery_rect utils.RectSpecs
@@ -40,16 +32,19 @@ var player_defense_rect utils.RectSpecs
 var player_attack_start_time time.Time
 var player_max_hp int
 var player_max_hp_width int
+var player_concentration_count = 0
 var player_can_attack = true
 var player_can_level_up = false
 var player_is_attacking = false
 var player_is_animating = false
 var player_is_defending = false
 var player_is_stunned = false
+var player_is_concentrating = false
 
 const PLAYER_HP_PER_LEVEL int = 5
 const PLAYER_DEFENSE_DELAY int = 800
 const PLAYER_STUN_DELAY int = 5000
+const PLAYER_SPELL_EFFECT_CHANCE = 50
 
 func Player() {
 	player_init()
@@ -60,6 +55,7 @@ func Player() {
 		Start: func() {
 			player_sprite.Init()
 
+			// Input
 			events.Subscribe(events.Input, events.INPUT_MOUSE_CLICK_DOWN, func(data any) {
 				click := data.(events.InputMouseClickDownEvent)
 
@@ -77,6 +73,7 @@ func Player() {
 				}
 			})
 
+			// Level Up
 			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_1, func(data any) {
 				player_level_up_listener(1)
 			})
@@ -89,6 +86,7 @@ func Player() {
 				player_level_up_listener(3)
 			})
 
+			// Take Damage
 			game_events.Bus.Subscribe(game_events.ENEMY_ATTACK_EVENT, func(e eventbus.Event) {
 				damage := e.(game_events.EnemyAttackEvent).Damage
 				player_take_damage_listener(int(damage))
@@ -134,7 +132,7 @@ func PlayerLevelUp() {
 	player_can_level_up = true
 }
 
-func PlayerLoadWeapon(weapon Weapon) {
+func PlayerLoadWeapon(weapon weapons.Weapon) {
 	player_current_weapon = weapon
 	println(fmt.Sprintf("Player weapon loaded: %s", weapon.Name))
 }
@@ -190,19 +188,45 @@ func player_init() {
 }
 
 func player_damage() int {
-	mod := 1
-	switch player_current_weapon.Modifier {
-	case systems.STR:
-		mod = player_skills.STR
-	case systems.INT:
-		mod = player_skills.INT
-	case systems.SPD:
-		mod = player_skills.SPD
+	return player_current_weapon.Damage * player_skills.STR
+}
+
+func player_spell_effect() spells.Effect {
+	if player_current_weapon.Type == weapons.Physical {
+		return spells.Effect{}
 	}
 
-	damage := player_current_weapon.Damage * mod
+	if player_concentration_count >= player_skills.INT {
+		println("Player cannot active more spells until concentration break")
+		return spells.Effect{}
+	}
 
-	return damage
+	roll := rand.IntN(100)
+	print(fmt.Sprintf(values.Blue+"Status roll: %v\n", roll))
+
+	if roll <= PLAYER_SPELL_EFFECT_CHANCE {
+		player_is_concentrating = true
+		player_concentration_count += 1
+
+		var effect_type spells.EffectType
+		switch player_current_weapon.Type {
+		case weapons.Fire:
+			effect_type = spells.Burn
+		case weapons.Ice:
+			effect_type = spells.Cold
+		case weapons.Shock:
+			effect_type = spells.Paralysis
+		}
+
+		print(fmt.Sprintf(values.Yellow+"Player triggered spell effect: %v\n"+values.Reset, effect_type))
+
+		return spells.Effect{
+			Type:  effect_type,
+			Stack: 1,
+		}
+	}
+
+	return spells.Effect{}
 }
 
 func player_attack_listener() {
@@ -214,8 +238,10 @@ func player_attack_listener() {
 	player_is_attacking = true
 	player_is_animating = true
 	player_attack_start_time = time.Now()
+
 	game_events.Bus.Publish(game_events.PlayerAttackEvent{
 		Damage: player_damage(),
+		Effect: player_spell_effect(),
 	})
 
 	temp_rect := player_weapon_rect
@@ -249,21 +275,31 @@ func player_take_damage_listener(base_damage int) {
 	damage := utils1.CalcDamange(raw_damage, raw_damage/2)
 
 	if player_is_defending {
-		stun_roll := rand.IntN(100)
-		stun_chance := (damage * 100) / player_max_hp
+		break_roll := rand.IntN(100)
+		break_chance := (damage * 100) / player_max_hp
 
-		print(fmt.Sprintf(values.Blue+"Enemy is trying to deal %v damage, which represents %v perc of the player's HP. Stun rolled %v\n"+values.Reset, damage, stun_chance, stun_roll))
+		if break_roll <= break_chance {
+			if player_current_weapon.Type == weapons.Physical {
+				player_is_stunned = true
+				print(fmt.Sprintf("%s", values.Yellow+"Player is Stunned\n"+values.Reset))
 
-		if stun_roll <= stun_chance {
-			player_is_stunned = true
-			print(fmt.Sprintf("%s", values.Yellow+"Player is Stunned\n"+values.Reset))
+				time.AfterFunc(time.Millisecond*time.Duration(PLAYER_STUN_DELAY), func() {
+					player_is_stunned = false
+				})
 
-			time.AfterFunc(time.Millisecond*time.Duration(PLAYER_STUN_DELAY), func() {
-				player_is_stunned = false
-			})
+				return
+			}
+
+			println("Player is using a magic attack and enemy broke defense. Concentration should stop now")
+			if player_is_concentrating {
+				player_is_concentrating = false
+				player_concentration_count = 0
+
+				println("Player is no longer concentrating and will publish a break event")
+
+				events.Emit(events.Game, game_events.PlayerBreakSpellEvent{})
+			}
 		}
-
-		return
 	}
 
 	message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset

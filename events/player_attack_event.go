@@ -1,9 +1,14 @@
 package game_events
 
-import "github.com/Papiermond/eventbus"
+import (
+	"gates/spells"
+
+	"github.com/Papiermond/eventbus"
+)
 
 type PlayerAttackEvent struct {
 	Damage  int
+	Effect  spells.Effect
 	Message string
 }
 
