@@ -2,39 +2,38 @@ package actors
 
 import (
 	"fmt"
+	"gates/actors/enemies"
 	game_events "gates/events"
+	"gates/spells"
 	"gates/systems"
 	utils1 "gates/utils"
 	"gates/values"
 	"time"
 
 	"github.com/Papiermond/eventbus"
+	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
-type EnemySpecs struct {
-	Name            string
-	Image_Path      string
-	Size            int
-	HP              int
-	Attack_Interval int
-	Attack_Damage   int
-	Defense         int
-}
-
-var enemy_specs EnemySpecs
+var enemy_specs enemies.EnemySpecs
 var enemy_go *lifecycle.GameObject
 var enemy_sprite *render.Sprite
 var enemy_health *systems.Health
 var enemy_damage_ui_text *render.Font
 var enemy_hp_rect utils.RectSpecs
-var enemy_hp_max_width int
 var enemy_anim_position utils.RectSpecs
+var enemy_hp_max_width int
+var enemy_stack_count int
+var enemy_burn_damage int
 var enemy_is_alive bool = false
+var enemy_is_burn = false
+var enemy_is_cold = false
+var enemy_is_paralized = false
 var enemy_attack_done = make(chan bool)
+var enemy_burn_done = make(chan bool)
 
 func Enemy() {
 	// CRASH: There's a bug with the event system that blocks the main thread when subscribing to more events on this file (maybe package?)
@@ -57,7 +56,21 @@ func Enemy() {
 			enemy_sprite.Init()
 
 			game_events.Bus.Subscribe(game_events.PLAYER_ATTACK_EVENT, func(e eventbus.Event) {
-				enemy_take_damage(e.(game_events.PlayerAttackEvent).Damage)
+				damage := e.(game_events.PlayerAttackEvent).Damage
+				effect := e.(game_events.PlayerAttackEvent).Effect
+
+				enemy_take_damage(damage, effect)
+			})
+
+			events.Subscribe(events.Game, game_events.PLAYER_BREAK_SPELL_EVENT, func(data any) {
+				println("Enemy knows the player is not concentrating anymore. All effects should stop now")
+
+				enemy_is_burn = false
+				enemy_is_cold = false
+				enemy_is_paralized = false
+				enemy_stack_count = 0
+				enemy_burn_damage = 0
+				enemy_burn_done <- true
 			})
 		},
 		Update: func() {
@@ -70,7 +83,7 @@ func Enemy() {
 	})
 }
 
-func LoadEnemy(specs EnemySpecs) {
+func LoadEnemy(specs enemies.EnemySpecs) {
 	message := fmt.Sprintf("Changing enemy specs. Loading %v", specs.Name)
 	println(message)
 
@@ -101,6 +114,12 @@ func enemy_init() {
 	enemy_hp_rect.PosY -= 24
 	enemy_hp_rect.Height = 16
 
+	enemy_is_burn = false
+	enemy_is_cold = false
+	enemy_is_paralized = false
+	enemy_stack_count = 0
+	enemy_burn_damage = 0
+
 	enemy_damage_ui_text = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
 	enemy_damage_ui_text.Init("10", render.Transparent, math.Vector2{X: 0, Y: 0})
 	enemy_damage_ui_text.AlignText(render.TopCenter, math.Vector2{X: 0, Y: 32})
@@ -129,6 +148,7 @@ func enemy_init() {
 func enemy_stop() {
 	go func() {
 		enemy_attack_done <- true
+		enemy_burn_done <- true
 	}()
 
 	enemy_is_alive = false
@@ -161,7 +181,7 @@ func enemy_respawn() {
 	})
 }
 
-func enemy_take_damage(player_damage int) {
+func enemy_take_damage(player_damage int, effect spells.Effect) {
 	if !enemy_is_alive {
 		return
 	}
@@ -185,7 +205,44 @@ func enemy_take_damage(player_damage int) {
 
 	if enemy_health.GetCurrent() <= 0 {
 		enemy_stop()
+		return
 	}
+
+	if effect.Stack > 0 {
+		enemy_stack_count += effect.Stack
+
+		switch effect.Type {
+		case spells.Burn:
+			enemy_apply_burn(effect.Stack)
+		case spells.Cold:
+			enemy_apply_cold()
+		case spells.Paralysis:
+			enemy_apply_paralysis()
+		}
+	}
+}
+
+func enemy_apply_burn(base_damage int) {
+	var raw float64 = float64(base_damage) * 0.1
+	if raw < 1 {
+		raw = 1
+	}
+
+	enemy_burn_damage = int(raw) * enemy_stack_count
+
+	if !enemy_is_burn {
+		enemy_is_burn = true
+
+		go enemy_burn_task()
+	}
+}
+
+func enemy_apply_cold() {
+
+}
+
+func enemy_apply_paralysis() {
+
 }
 
 func enemy_attack_task(interval int) {
@@ -208,6 +265,26 @@ func enemy_attack_task(interval int) {
 			game_events.Bus.Publish(game_events.EnemyAttackEvent{
 				Damage: damage,
 			})
+		}
+	}
+}
+
+func enemy_burn_task() {
+	ticker := time.NewTicker(time.Millisecond * 1000)
+
+	for {
+		select {
+		case <-enemy_burn_done:
+			println("Enemy is no longer burning")
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			println("Enemy is burning")
+			enemy_health.TakeDamage(enemy_burn_damage)
+
+			if enemy_health.GetCurrent() <= 0 {
+				enemy_stop()
+			}
 		}
 	}
 }
