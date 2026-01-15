@@ -6,6 +6,7 @@ import (
 	"gates/systems"
 	utils1 "gates/utils"
 	"gates/values"
+	"math/rand/v2"
 	"time"
 
 	"github.com/Papiermond/eventbus"
@@ -34,15 +35,21 @@ var player_current_weapon Weapon
 var player_weapon_rect utils.RectSpecs
 var player_hp_rect utils.RectSpecs
 var player_recovery_rect utils.RectSpecs
+var player_anim_position utils.RectSpecs
+var player_defense_rect utils.RectSpecs
 var player_attack_start_time time.Time
 var player_max_hp int
 var player_max_hp_width int
-var player_anim_position utils.RectSpecs
-var player_can_attack bool = true
+var player_can_attack = true
 var player_can_level_up = false
 var player_is_attacking = false
+var player_is_animating = false
+var player_is_defending = false
+var player_is_stunned = false
 
 const PLAYER_HP_PER_LEVEL int = 5
+const PLAYER_DEFENSE_DELAY int = 800
+const PLAYER_STUN_DELAY int = 5000
 
 func Player() {
 	player_init()
@@ -54,7 +61,20 @@ func Player() {
 			player_sprite.Init()
 
 			events.Subscribe(events.Input, events.INPUT_MOUSE_CLICK_DOWN, func(data any) {
-				player_click_listener()
+				click := data.(events.InputMouseClickDownEvent)
+
+				if player_is_animating || player_is_defending || player_is_stunned {
+					println("Player cannot act now")
+					return
+				}
+
+				if click.Index.Left == 1 {
+					player_attack_listener()
+				}
+
+				if click.Index.Right == 1 {
+					player_defense_listener()
+				}
 			})
 
 			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_1, func(data any) {
@@ -92,9 +112,20 @@ func Player() {
 			}
 		},
 		Render: func() {
+			player_sprite.UpdateRect(player_anim_position)
+
+			if player_is_defending {
+				render.DrawRect(player_defense_rect, render.White)
+			}
+
+			if player_is_stunned {
+				render.DrawRect(player_hp_rect, render.Yellow)
+				render.DrawRect(player_recovery_rect, render.Yellow)
+				return
+			}
+
 			render.DrawRect(player_hp_rect, render.Green)
 			render.DrawRect(player_recovery_rect, render.Blue)
-			player_sprite.UpdateRect(player_anim_position)
 		},
 	})
 }
@@ -126,6 +157,13 @@ func player_init() {
 		Height: 24,
 	}
 
+	player_defense_rect = utils.RectSpecs{
+		PosX:   (values.SCREEN_SIZE.X / 2) - 256,
+		PosY:   values.SCREEN_SIZE.Y - (values.SCREEN_SIZE.Y / 3),
+		Width:  512,
+		Height: 512,
+	}
+
 	player_recovery_rect = player_hp_rect
 	player_recovery_rect.PosY -= 24
 	player_recovery_rect.Height = 12
@@ -147,7 +185,7 @@ func player_init() {
 	if player_damage_ui_text == nil {
 		player_damage_ui_text = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
 		player_damage_ui_text.Init("10", render.Transparent, math.Vector2{X: 0, Y: 0})
-		player_damage_ui_text.AlignText(render.BottomCenter, math.Vector2{X: 0, Y: 72})
+		player_damage_ui_text.AlignText(render.BottomCenter, math.Vector2{X: 0, Y: 96})
 	}
 }
 
@@ -167,13 +205,14 @@ func player_damage() int {
 	return damage
 }
 
-func player_click_listener() {
+func player_attack_listener() {
 	if !player_can_attack {
 		return
 	}
 
 	player_can_attack = false
 	player_is_attacking = true
+	player_is_animating = true
 	player_attack_start_time = time.Now()
 	game_events.Bus.Publish(game_events.PlayerAttackEvent{
 		Damage: player_damage(),
@@ -190,13 +229,42 @@ func player_click_listener() {
 
 	// Weapon animation
 	time.AfterFunc(time.Millisecond*350, func() {
+		player_is_animating = false
 		player_anim_position = player_weapon_rect
+	})
+}
+
+func player_defense_listener() {
+	player_is_defending = true
+	player_sprite.Disable()
+
+	time.AfterFunc(time.Millisecond*time.Duration(PLAYER_DEFENSE_DELAY), func() {
+		player_is_defending = false
+		player_sprite.Enable()
 	})
 }
 
 func player_take_damage_listener(base_damage int) {
 	raw_damage := base_damage / player_skills.STR
 	damage := utils1.CalcDamange(raw_damage, raw_damage/2)
+
+	if player_is_defending {
+		stun_roll := rand.IntN(100)
+		stun_chance := (damage * 100) / player_max_hp
+
+		print(fmt.Sprintf(values.Blue+"Enemy is trying to deal %v damage, which represents %v perc of the player's HP. Stun rolled %v\n"+values.Reset, damage, stun_chance, stun_roll))
+
+		if stun_roll <= stun_chance {
+			player_is_stunned = true
+			print(fmt.Sprintf("%s", values.Yellow+"Player is Stunned\n"+values.Reset))
+
+			time.AfterFunc(time.Millisecond*time.Duration(PLAYER_STUN_DELAY), func() {
+				player_is_stunned = false
+			})
+		}
+
+		return
+	}
 
 	message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
 	println(message)
