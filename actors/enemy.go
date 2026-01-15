@@ -32,6 +32,7 @@ var enemy_health *systems.Health
 var enemy_damage_ui_text *render.Font
 var enemy_hp_rect utils.RectSpecs
 var enemy_hp_max_width int
+var enemy_anim_position utils.RectSpecs
 var enemy_is_alive bool = false
 var enemy_attack_done = make(chan bool)
 
@@ -64,6 +65,7 @@ func Enemy() {
 		},
 		Render: func() {
 			render.DrawRect(enemy_hp_rect, render.Red)
+			enemy_sprite.UpdateRect(enemy_anim_position)
 		},
 	})
 }
@@ -71,6 +73,11 @@ func Enemy() {
 func LoadEnemy(specs EnemySpecs) {
 	message := fmt.Sprintf("Changing enemy specs. Loading %v", specs.Name)
 	println(message)
+
+	if enemy_sprite != nil && enemy_specs.Name != specs.Name {
+		enemy_sprite.UpdateImage(specs.Image_Path, render.Transparent)
+		enemy_sprite.Disable()
+	}
 
 	enemy_specs = specs
 }
@@ -87,6 +94,7 @@ func enemy_init() {
 		Width:  enemy_specs.Size,
 		Height: enemy_specs.Size,
 	}
+	enemy_anim_position = rect
 
 	enemy_hp_max_width = rect.Width
 	enemy_hp_rect = rect
@@ -210,9 +218,8 @@ func enemy_scale(direction int) {
 	}
 
 	sprite_rect := enemy_sprite.GetRect()
-	sprite_rect.PosX -= 64 * direction
-	sprite_rect.PosY -= 64 * direction
-	sprite_rect.Width += 128 * direction
-	sprite_rect.Height += 128 * direction
-	enemy_sprite.UpdateRect(sprite_rect)
+	enemy_anim_position.PosX = sprite_rect.PosX - 64*direction
+	enemy_anim_position.PosY = sprite_rect.PosY - 64*direction
+	enemy_anim_position.Width = sprite_rect.Width + 128*direction
+	enemy_anim_position.Height = sprite_rect.Height + 128*direction
 }

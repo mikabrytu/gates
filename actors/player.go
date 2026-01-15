@@ -37,6 +37,7 @@ var player_recovery_rect utils.RectSpecs
 var player_attack_start_time time.Time
 var player_max_hp int
 var player_max_hp_width int
+var player_anim_position utils.RectSpecs
 var player_can_attack bool = true
 var player_can_level_up = false
 var player_is_attacking = false
@@ -93,6 +94,7 @@ func Player() {
 		Render: func() {
 			render.DrawRect(player_hp_rect, render.Green)
 			render.DrawRect(player_recovery_rect, render.Blue)
+			player_sprite.UpdateRect(player_anim_position)
 		},
 	})
 }
@@ -115,6 +117,7 @@ func player_init() {
 		Width:  player_current_weapon.SpriteSize.X,
 		Height: player_current_weapon.SpriteSize.Y,
 	}
+	player_anim_position = player_weapon_rect
 
 	player_hp_rect = utils.RectSpecs{
 		PosX:   (values.SCREEN_SIZE.X / 2) - (player_max_hp_width / 2),
@@ -178,7 +181,7 @@ func player_click_listener() {
 
 	temp_rect := player_weapon_rect
 	temp_rect.PosX = (values.SCREEN_SIZE.X / 2) - (player_current_weapon.SpriteSize.X / 2)
-	player_sprite.UpdateRect(temp_rect)
+	player_anim_position = temp_rect
 
 	// Recovery delay
 	time.AfterFunc(time.Millisecond*time.Duration(player_get_recovery()), func() {
@@ -187,7 +190,7 @@ func player_click_listener() {
 
 	// Weapon animation
 	time.AfterFunc(time.Millisecond*350, func() {
-		player_sprite.UpdateRect(player_weapon_rect)
+		player_anim_position = player_weapon_rect
 	})
 }
 
