@@ -14,7 +14,6 @@ import (
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
-	"github.com/mikabrytu/gomes-engine/ui"
 )
 
 type GameState int
@@ -27,7 +26,7 @@ const (
 )
 
 var game_state GameState
-var fonts [4]*ui.Font
+var fonts [4]*render.Font
 var rounds int
 
 func main() {
@@ -179,9 +178,9 @@ func show_weapon_text() {
 	messages := []string{"Choose your weapon", "1 - Sword", "2 - Fire Spell", "3 - Bow"}
 
 	for i, m := range messages {
-		fonts[i] = ui.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
+		fonts[i] = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
 		fonts[i].Init(m, render.White, math.Vector2{X: 0, Y: 0})
-		fonts[i].AlignText(ui.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
+		fonts[i].AlignText(render.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
 	}
 }
 
@@ -190,7 +189,7 @@ func show_level_up_text() {
 	for i, m := range messages {
 		fonts[i].UpdateText(m)
 		fonts[i].UpdateColor(render.Yellow)
-		fonts[i].AlignText(ui.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
+		fonts[i].AlignText(render.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
 	}
 }
 

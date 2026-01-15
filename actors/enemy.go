@@ -12,7 +12,6 @@ import (
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
-	"github.com/mikabrytu/gomes-engine/ui"
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
@@ -30,7 +29,7 @@ var enemy_specs EnemySpecs
 var enemy_go *lifecycle.GameObject
 var enemy_sprite *render.Sprite
 var enemy_health *systems.Health
-var enemy_damage_ui_text *ui.Font
+var enemy_damage_ui_text *render.Font
 var enemy_hp_rect utils.RectSpecs
 var enemy_hp_max_width int
 var enemy_is_alive bool = false
@@ -74,22 +73,6 @@ func LoadEnemy(specs EnemySpecs) {
 	println(message)
 
 	enemy_specs = specs
-
-	if enemy_sprite != nil {
-		// TODO: Make this re-usable on enemy_init
-		rect := utils.RectSpecs{
-			PosX:   (values.SCREEN_SIZE.X / 2) - (enemy_specs.Size / 2),
-			PosY:   32,
-			Width:  enemy_specs.Size,
-			Height: enemy_specs.Size,
-		}
-
-		enemy_sprite.Enable()
-		enemy_sprite.ClearSprite()
-		enemy_sprite.UpdateImage(enemy_specs.Image_Path)
-		enemy_sprite.UpdateRect(rect)
-		enemy_sprite.Init()
-	}
 }
 
 func enemy_init() {
@@ -110,9 +93,9 @@ func enemy_init() {
 	enemy_hp_rect.PosY -= 24
 	enemy_hp_rect.Height = 16
 
-	enemy_damage_ui_text = ui.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
+	enemy_damage_ui_text = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
 	enemy_damage_ui_text.Init("10", render.Transparent, math.Vector2{X: 0, Y: 0})
-	enemy_damage_ui_text.AlignText(ui.TopCenter, math.Vector2{X: 0, Y: 32})
+	enemy_damage_ui_text.AlignText(render.TopCenter, math.Vector2{X: 0, Y: 32})
 
 	if enemy_sprite == nil {
 		enemy_sprite = render.NewSprite(

@@ -13,7 +13,6 @@ import (
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
-	"github.com/mikabrytu/gomes-engine/ui"
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
@@ -30,7 +29,7 @@ type Weapon struct {
 var player_sprite *render.Sprite
 var player_health *systems.Health
 var player_skills *systems.Skill
-var player_damage_ui_text *ui.Font
+var player_damage_ui_text *render.Font
 var player_current_weapon Weapon
 var player_weapon_rect utils.RectSpecs
 var player_hp_rect utils.RectSpecs
@@ -143,9 +142,9 @@ func player_init() {
 	print(fmt.Sprintf("Player initialized with %d health\n", player_health.GetCurrent()))
 
 	if player_damage_ui_text == nil {
-		player_damage_ui_text = ui.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
+		player_damage_ui_text = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
 		player_damage_ui_text.Init("10", render.Transparent, math.Vector2{X: 0, Y: 0})
-		player_damage_ui_text.AlignText(ui.BottomCenter, math.Vector2{X: 0, Y: 72})
+		player_damage_ui_text.AlignText(render.BottomCenter, math.Vector2{X: 0, Y: 72})
 	}
 }
 
