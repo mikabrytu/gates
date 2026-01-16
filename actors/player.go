@@ -93,8 +93,13 @@ func Player() {
 			})
 
 			game_events.Bus.Subscribe(game_events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
-				player_is_concentrating = false
-				player_concentration_count = 0
+				player_lost_concentration(false)
+			})
+
+			// Enemy
+			events.Subscribe(events.Game, game_events.ENEMY_BREAK_PARALYSIS_EVENT, func(data any) {
+				println("Enemy is trying to break free from Paralysis")
+				player_lost_concentration(false)
 			})
 		},
 		Update: func() {
@@ -324,12 +329,7 @@ func player_negate_damage(damage int) {
 		}
 
 		if player_is_concentrating {
-			player_is_concentrating = false
-			player_concentration_count = 0
-
-			println(values.Yellow + "Player is no longer concentrating and will publish a break event" + values.Reset)
-
-			events.Emit(events.Game, game_events.PlayerBreakSpellEvent{})
+			player_lost_concentration(true)
 		}
 	}
 }
@@ -364,6 +364,16 @@ func player_level_up_listener(skill int) {
 
 func player_get_recovery() int {
 	return player_current_weapon.Recovery / player_skills.SPD
+}
+
+func player_lost_concentration(fire_event bool) {
+	player_concentration_count = 0
+	player_is_concentrating = false
+
+	if fire_event {
+		println(values.Yellow + "Player is no longer concentrating and will publish a break event" + values.Reset)
+		events.Emit(events.Game, game_events.PlayerBreakSpellEvent{})
+	}
 }
 
 func old_math() {

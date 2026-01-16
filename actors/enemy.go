@@ -75,7 +75,7 @@ func Enemy() {
 			render.DrawRect(enemy_hp_rect, render.Red)
 			enemy_sprite.UpdateRect(enemy_anim_position)
 
-			if enemy_is_burn || enemy_is_cold {
+			if enemy_is_burn || enemy_is_cold || enemy_is_paralized {
 				for i, icon := range enemy_effect_icons {
 					icon.Rect.PosX = enemy_hp_rect.PosX + (i * (32 + 8))
 					icon.Rect.PosY = enemy_hp_rect.PosY + enemy_hp_rect.Height + 8
@@ -241,12 +241,21 @@ func enemy_take_damage(player_damage int, effect spells.Effect) {
 }
 
 func enemy_reset_effects() {
-	enemy_is_burn = false
-	enemy_is_cold = false
-	enemy_is_paralized = false
+	if enemy_is_burn {
+		enemy_is_burn = false
+		enemy_burn_damage = 0
+		enemy_burn_done <- true
+	}
+
+	if enemy_is_cold {
+		enemy_is_cold = false
+	}
+
+	if enemy_is_paralized {
+		enemy_is_paralized = false
+	}
+
 	enemy_stack_count = 0
-	enemy_burn_damage = 0
-	enemy_burn_done <- true
 	enemy_effect_icons = make([]spells.EffectIcon, 0)
 }
 
@@ -287,7 +296,16 @@ func enemy_apply_cold() {
 }
 
 func enemy_apply_paralysis() {
+	if !enemy_is_paralized {
+		enemy_is_paralized = true
+	}
 
+	enemy_effect_icons = make([]spells.EffectIcon, 0)
+	for range enemy_stack_count {
+		enemy_effect_icons = append(enemy_effect_icons, spells.EffectIcon{
+			Color: render.Purple,
+		})
+	}
 }
 
 func enemy_attack_task(interval int) {
@@ -301,26 +319,42 @@ func enemy_attack_task(interval int) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			damage := enemy_specs.Attack_Damage
+			skip := false
+			if enemy_is_paralized {
+				skip = true
+				enemy_stack_count -= 1
+				enemy_effect_icons = enemy_effect_icons[:len(enemy_effect_icons)-1]
 
-			if enemy_is_cold && enemy_stack_count > 0 {
-				damage = damage / (enemy_stack_count + 1)
-				println(values.Blue+"Enemy is cold and have a attack debuff. Current debuff:"+values.Reset, enemy_stack_count)
+				if enemy_stack_count <= 0 {
+					events.Emit(events.Game, game_events.EnemyBreakParalysisEvent{})
+					enemy_reset_effects()
+				}
 			}
-			if damage < 1 {
-				damage = 1
-			}
 
-			enemy_scale(1)
-			time.AfterFunc(time.Millisecond*400, func() {
-				enemy_scale(-1)
-			})
+			if skip {
+				println(values.Yellow + "Enemy is paralyzed. Skipping attack" + values.Reset)
+			} else {
+				damage := enemy_specs.Attack_Damage
 
-			time.AfterFunc(time.Millisecond*200, func() {
-				game_events.Bus.Publish(game_events.EnemyAttackEvent{
-					Damage: damage,
+				if enemy_is_cold && enemy_stack_count > 0 {
+					damage = damage / (enemy_stack_count + 1)
+					println(values.Blue+"Enemy is cold and have a attack debuff. Current debuff:"+values.Reset, enemy_stack_count)
+				}
+				if damage < 1 {
+					damage = 1
+				}
+
+				enemy_scale(1)
+				time.AfterFunc(time.Millisecond*400, func() {
+					enemy_scale(-1)
 				})
-			})
+
+				time.AfterFunc(time.Millisecond*200, func() {
+					game_events.Bus.Publish(game_events.EnemyAttackEvent{
+						Damage: damage,
+					})
+				})
+			}
 		}
 	}
 }
