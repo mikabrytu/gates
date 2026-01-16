@@ -19,7 +19,8 @@ func game() {
 	game_events.Init()
 
 	settings()
-	scenes.RunCombat()
+	scenes.RunMap()
+	//scenes.RunCombat()
 
 	gomesengine.Run()
 }
