@@ -25,7 +25,7 @@ var enemy_health *systems.Health
 var enemy_damage_ui_text *render.Font
 var enemy_hp_rect utils.RectSpecs
 var enemy_anim_position utils.RectSpecs
-var enemy_burn_icons []utils.RectSpecs
+var enemy_effect_icons []spells.EffectIcon
 var enemy_hp_max_width int
 var enemy_stack_count int
 var enemy_burn_damage int
@@ -75,14 +75,14 @@ func Enemy() {
 			render.DrawRect(enemy_hp_rect, render.Red)
 			enemy_sprite.UpdateRect(enemy_anim_position)
 
-			if enemy_is_burn {
-				for i, r := range enemy_burn_icons {
-					r.PosX = enemy_hp_rect.PosX + (i * (32 + 8))
-					r.PosY = enemy_hp_rect.PosY + enemy_hp_rect.Height + 8
-					r.Width = 32
-					r.Height = 32
+			if enemy_is_burn || enemy_is_cold {
+				for i, icon := range enemy_effect_icons {
+					icon.Rect.PosX = enemy_hp_rect.PosX + (i * (32 + 8))
+					icon.Rect.PosY = enemy_hp_rect.PosY + enemy_hp_rect.Height + 8
+					icon.Rect.Width = 32
+					icon.Rect.Height = 32
 
-					render.DrawRect(r, render.Orange)
+					render.DrawRect(icon.Rect, icon.Color)
 				}
 			}
 		},
@@ -120,7 +120,7 @@ func enemy_init() {
 	enemy_hp_rect.PosY -= 24
 	enemy_hp_rect.Height = 16
 
-	enemy_burn_icons = make([]utils.RectSpecs, 0)
+	enemy_effect_icons = make([]spells.EffectIcon, 0)
 
 	enemy_is_burn = false
 	enemy_is_cold = false
@@ -196,8 +196,20 @@ func enemy_take_damage(player_damage int, effect spells.Effect) {
 		return
 	}
 
-	raw := player_damage / enemy_specs.Defense
-	damage := utils1.CalcDamange(raw, raw/2)
+	var defense float64 = float64(enemy_specs.Defense)
+	if enemy_is_cold && enemy_stack_count > 0 {
+		defense = defense / float64(enemy_stack_count+1)
+		println(values.Blue+"Enemy is cold so it has a debuff on it's defense. Current debuf is:"+values.Reset, enemy_stack_count)
+	}
+	if defense < 1 {
+		defense = 1
+	}
+
+	var raw float64 = float64(player_damage) / defense
+	if raw < 1 {
+		raw = 1
+	}
+	damage := utils1.CalcDamange(int(raw), int(raw)/2)
 
 	print(fmt.Sprintf("%sPlayer is attacking with %d damage %s\n", values.Green, damage, values.Reset))
 
@@ -219,7 +231,7 @@ func enemy_take_damage(player_damage int, effect spells.Effect) {
 
 		switch effect.Type {
 		case spells.Burn:
-			enemy_apply_burn(effect.Stack)
+			enemy_apply_burn(damage)
 		case spells.Cold:
 			enemy_apply_cold()
 		case spells.Paralysis:
@@ -235,7 +247,7 @@ func enemy_reset_effects() {
 	enemy_stack_count = 0
 	enemy_burn_damage = 0
 	enemy_burn_done <- true
-	enemy_burn_icons = make([]utils.RectSpecs, 0)
+	enemy_effect_icons = make([]spells.EffectIcon, 0)
 }
 
 func enemy_apply_burn(base_damage int) {
@@ -247,9 +259,11 @@ func enemy_apply_burn(base_damage int) {
 	enemy_burn_damage = int(raw) * enemy_stack_count
 	print(fmt.Sprintf(values.Red+"Current Burning stack: %v\n"+values.Reset, enemy_stack_count))
 
-	enemy_burn_icons = make([]utils.RectSpecs, 0)
+	enemy_effect_icons = make([]spells.EffectIcon, 0)
 	for range enemy_stack_count {
-		enemy_burn_icons = append(enemy_burn_icons, utils.RectSpecs{})
+		enemy_effect_icons = append(enemy_effect_icons, spells.EffectIcon{
+			Color: render.Orange,
+		})
 	}
 
 	if !enemy_is_burn {
@@ -260,7 +274,16 @@ func enemy_apply_burn(base_damage int) {
 }
 
 func enemy_apply_cold() {
+	if !enemy_is_cold {
+		enemy_is_cold = true
+	}
 
+	enemy_effect_icons = make([]spells.EffectIcon, 0)
+	for range enemy_stack_count {
+		enemy_effect_icons = append(enemy_effect_icons, spells.EffectIcon{
+			Color: render.Blue,
+		})
+	}
 }
 
 func enemy_apply_paralysis() {
@@ -279,13 +302,24 @@ func enemy_attack_task(interval int) {
 			return
 		case <-ticker.C:
 			damage := enemy_specs.Attack_Damage
+
+			if enemy_is_cold && enemy_stack_count > 0 {
+				damage = damage / (enemy_stack_count + 1)
+				println(values.Blue+"Enemy is cold and have a attack debuff. Current debuff:"+values.Reset, enemy_stack_count)
+			}
+			if damage < 1 {
+				damage = 1
+			}
+
 			enemy_scale(1)
 			time.AfterFunc(time.Millisecond*400, func() {
 				enemy_scale(-1)
 			})
 
-			game_events.Bus.Publish(game_events.EnemyAttackEvent{
-				Damage: damage,
+			time.AfterFunc(time.Millisecond*200, func() {
+				game_events.Bus.Publish(game_events.EnemyAttackEvent{
+					Damage: damage,
+				})
 			})
 		}
 	}

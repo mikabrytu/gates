@@ -26,7 +26,8 @@ const (
 )
 
 var game_state GameState
-var fonts [4]*render.Font
+var weapons_fonts [6]*render.Font
+var skills_fonts [4]*render.Font
 var rounds int
 
 func main() {
@@ -67,7 +68,7 @@ func listeners() {
 	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_2, func(data any) {
 		switch game_state {
 		case Preparing:
-			actors.PlayerLoadWeapon(weapons.SpellFire)
+			actors.PlayerLoadWeapon(weapons.Bow)
 			sequence()
 		case Waiting:
 			hide_ui_text()
@@ -78,11 +79,25 @@ func listeners() {
 	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_3, func(data any) {
 		switch game_state {
 		case Preparing:
-			actors.PlayerLoadWeapon(weapons.Bow)
+			actors.PlayerLoadWeapon(weapons.FireSpell)
 			sequence()
 		case Waiting:
 			hide_ui_text()
 			show_continue_message()
+		}
+	})
+
+	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_4, func(data any) {
+		if game_state == Preparing {
+			actors.PlayerLoadWeapon(weapons.IceSpell)
+			sequence()
+		}
+	})
+
+	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_5, func(data any) {
+		if game_state == Preparing {
+			actors.PlayerLoadWeapon(weapons.ShockSpell)
+			sequence()
 		}
 	})
 
@@ -184,31 +199,62 @@ func sequence() {
 }
 
 func show_weapon_text() {
-	messages := []string{"Choose your weapon", "1 - Sword", "2 - Fire Spell", "3 - Bow"}
+	messages := []string{
+		"Choose your weapon",
+		"1 - Sword",
+		"2 - Bow",
+		"3 - Fire Spell",
+		"4 - Ice Spell",
+		"5 - Shock Spell",
+	}
 
 	for i, m := range messages {
-		fonts[i] = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
-		fonts[i].Init(m, render.White, math.Vector2{X: 0, Y: 0})
-		fonts[i].AlignText(render.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
+		if weapons_fonts[i] == nil {
+			weapons_fonts[i] = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
+		}
+
+		weapons_fonts[i].Init(m, render.White, math.Vector2{X: 0, Y: 0})
+		weapons_fonts[i].AlignText(render.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
 	}
 }
 
 func show_level_up_text() {
 	messages := []string{"LEVEL UP. Choose a skill to increase", "1 - STR", "2 - INT", "3 - SPD"}
+
 	for i, m := range messages {
-		fonts[i].UpdateText(m)
-		fonts[i].UpdateColor(render.Yellow)
-		fonts[i].AlignText(render.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
+		if skills_fonts[i] == nil {
+			skills_fonts[i] = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
+		}
+
+		skills_fonts[i].Init(m, render.Yellow, math.Vector2{X: 0, Y: 0})
+		skills_fonts[i].AlignText(render.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
+
+		if !skills_fonts[i].IsEnable() {
+			skills_fonts[i].Enable()
+		}
 	}
 }
 
 func hide_ui_text() {
-	for _, f := range fonts {
-		f.UpdateColor(render.Transparent)
+	for _, f := range weapons_fonts {
+		if f == nil {
+			continue
+		}
+
+		f.Disable()
+	}
+
+	for _, f := range skills_fonts {
+		if f == nil {
+			continue
+		}
+
+		f.Disable()
 	}
 }
 
 func show_continue_message() {
-	fonts[0].UpdateText("Enemy is dead. Press SPACE to continue...")
-	fonts[0].UpdateColor(render.Blue)
+	skills_fonts[0].UpdateText("Enemy is dead. Press SPACE to continue...")
+	skills_fonts[0].UpdateColor(render.Blue)
+	skills_fonts[0].Enable()
 }
