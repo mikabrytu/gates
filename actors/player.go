@@ -322,7 +322,7 @@ func player_negate_damage(damage int) {
 			player_lost_concentration(true)
 		}
 
-		if player_current_weapon.Type == weapons.Physical || player_current_weapon.Type == weapons.Shock {
+		if player_current_weapon.Type != weapons.Fire {
 			player_is_stunned = true
 			print(fmt.Sprintf("%s", values.Yellow+"Player is Stunned\n"+values.Reset))
 
