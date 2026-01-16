@@ -284,8 +284,7 @@ func player_defense_listener() {
 }
 
 func player_take_damage_listener(base_damage int) {
-	raw_damage := base_damage / player_skills.STR
-	damage := utils1.CalcDamange(raw_damage, raw_damage/2)
+	damage := max(base_damage/player_skills.STR, 1)
 
 	if player_is_defending {
 		player_negate_damage(damage)

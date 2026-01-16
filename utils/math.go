@@ -7,5 +7,5 @@ func Lerp(a, b, t float64) float64 {
 }
 
 func CalcDamange(max, min int) int {
-	return rand.IntN(max-min) + min
+	return (rand.IntN(max-min) + min) + 1
 }

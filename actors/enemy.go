@@ -335,14 +335,11 @@ func enemy_attack_task(interval int) {
 				println(values.Yellow + "Enemy is paralyzed. Skipping attack" + values.Reset)
 				enemy_shake()
 			} else {
-				damage := enemy_specs.Attack_Damage
+				damage := utils1.CalcDamange(enemy_specs.Attack_Damage, enemy_specs.Attack_Damage/2)
 
 				if enemy_is_cold && enemy_stack_count > 0 {
 					damage = damage / (enemy_stack_count + 1)
 					println(values.Blue+"Enemy is cold and have a attack debuff. Current debuff:"+values.Reset, enemy_stack_count)
-				}
-				if damage < 1 {
-					damage = 1
 				}
 
 				enemy_scale(1)
