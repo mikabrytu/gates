@@ -28,6 +28,7 @@ const (
 var game_state GameState
 var weapons_fonts [6]*render.Font
 var skills_fonts [4]*render.Font
+var continue_font *render.Font
 var rounds int
 
 func main() {
@@ -251,10 +252,20 @@ func hide_ui_text() {
 
 		f.Disable()
 	}
+
+	if continue_font == nil {
+		return
+	}
+
+	continue_font.Disable()
 }
 
 func show_continue_message() {
-	skills_fonts[0].UpdateText("Enemy is dead. Press SPACE to continue...")
-	skills_fonts[0].UpdateColor(render.Blue)
-	skills_fonts[0].Enable()
+	if continue_font == nil {
+		continue_font = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
+		continue_font.Init("Enemy is dead. Press SPACE to continue...", render.Blue, math.Vector2{X: 0, Y: 0})
+		continue_font.AlignText(render.TopLeft, math.Vector2{X: 16, Y: 16})
+	}
+
+	continue_font.Enable()
 }
