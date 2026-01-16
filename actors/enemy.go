@@ -25,6 +25,7 @@ var enemy_health *systems.Health
 var enemy_damage_ui_text *render.Font
 var enemy_hp_rect utils.RectSpecs
 var enemy_anim_position utils.RectSpecs
+var enemy_burn_icons []utils.RectSpecs
 var enemy_hp_max_width int
 var enemy_stack_count int
 var enemy_burn_damage int
@@ -63,14 +64,8 @@ func Enemy() {
 			})
 
 			events.Subscribe(events.Game, game_events.PLAYER_BREAK_SPELL_EVENT, func(data any) {
-				println("Enemy knows the player is not concentrating anymore. All effects should stop now")
-
-				enemy_is_burn = false
-				enemy_is_cold = false
-				enemy_is_paralized = false
-				enemy_stack_count = 0
-				enemy_burn_damage = 0
-				enemy_burn_done <- true
+				println(values.Magenta + "Enemy knows the player is not concentrating anymore. All effects should stop now" + values.Reset)
+				enemy_reset_effects()
 			})
 		},
 		Update: func() {
@@ -79,6 +74,17 @@ func Enemy() {
 		Render: func() {
 			render.DrawRect(enemy_hp_rect, render.Red)
 			enemy_sprite.UpdateRect(enemy_anim_position)
+
+			if enemy_is_burn {
+				for i, r := range enemy_burn_icons {
+					r.PosX = enemy_hp_rect.PosX + (i * (32 + 8))
+					r.PosY = enemy_hp_rect.PosY + enemy_hp_rect.Height + 8
+					r.Width = 32
+					r.Height = 32
+
+					render.DrawRect(r, render.Orange)
+				}
+			}
 		},
 	})
 }
@@ -114,6 +120,8 @@ func enemy_init() {
 	enemy_hp_rect.PosY -= 24
 	enemy_hp_rect.Height = 16
 
+	enemy_burn_icons = make([]utils.RectSpecs, 0)
+
 	enemy_is_burn = false
 	enemy_is_cold = false
 	enemy_is_paralized = false
@@ -148,7 +156,9 @@ func enemy_init() {
 func enemy_stop() {
 	go func() {
 		enemy_attack_done <- true
-		enemy_burn_done <- true
+
+		println(values.Cyan + "enemy stop is calling the reset of status effects" + values.Reset)
+		enemy_reset_effects()
 	}()
 
 	enemy_is_alive = false
@@ -194,11 +204,7 @@ func enemy_take_damage(player_damage int, effect spells.Effect) {
 	enemy_health.TakeDamage(int(damage))
 	enemy_scale(-1)
 
-	enemy_damage_ui_text.UpdateText(fmt.Sprint(damage))
-	enemy_damage_ui_text.UpdateColor(render.White)
-	time.AfterFunc(time.Millisecond*1200, func() {
-		enemy_damage_ui_text.UpdateColor(render.Transparent)
-	})
+	enemy_show_damage_text(damage, render.White)
 	time.AfterFunc(time.Millisecond*400, func() {
 		enemy_scale(1)
 	})
@@ -222,6 +228,16 @@ func enemy_take_damage(player_damage int, effect spells.Effect) {
 	}
 }
 
+func enemy_reset_effects() {
+	enemy_is_burn = false
+	enemy_is_cold = false
+	enemy_is_paralized = false
+	enemy_stack_count = 0
+	enemy_burn_damage = 0
+	enemy_burn_done <- true
+	enemy_burn_icons = make([]utils.RectSpecs, 0)
+}
+
 func enemy_apply_burn(base_damage int) {
 	var raw float64 = float64(base_damage) * 0.1
 	if raw < 1 {
@@ -229,6 +245,12 @@ func enemy_apply_burn(base_damage int) {
 	}
 
 	enemy_burn_damage = int(raw) * enemy_stack_count
+	print(fmt.Sprintf(values.Red+"Current Burning stack: %v\n"+values.Reset, enemy_stack_count))
+
+	enemy_burn_icons = make([]utils.RectSpecs, 0)
+	for range enemy_stack_count {
+		enemy_burn_icons = append(enemy_burn_icons, utils.RectSpecs{})
+	}
 
 	if !enemy_is_burn {
 		enemy_is_burn = true
@@ -279,8 +301,9 @@ func enemy_burn_task() {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			println("Enemy is burning")
+			print(fmt.Sprintf("Enemy is burning at %v damage\n", enemy_burn_damage))
 			enemy_health.TakeDamage(enemy_burn_damage)
+			enemy_show_damage_text(enemy_burn_damage, render.Orange)
 
 			if enemy_health.GetCurrent() <= 0 {
 				enemy_stop()
@@ -299,4 +322,12 @@ func enemy_scale(direction int) {
 	enemy_anim_position.PosY = sprite_rect.PosY - 64*direction
 	enemy_anim_position.Width = sprite_rect.Width + 128*direction
 	enemy_anim_position.Height = sprite_rect.Height + 128*direction
+}
+
+func enemy_show_damage_text(damage int, color render.Color) {
+	enemy_damage_ui_text.UpdateText(fmt.Sprint(damage))
+	enemy_damage_ui_text.UpdateColor(color)
+	time.AfterFunc(time.Millisecond*1200, func() {
+		enemy_damage_ui_text.UpdateColor(render.Transparent)
+	})
 }

@@ -17,7 +17,7 @@ var Rat = EnemySpecs{
 	Name:            "Rat",
 	Image_Path:      "assets/images/sprites/rat.png",
 	Size:            SPRITE_SIZE,
-	HP:              100,
+	HP:              10,
 	Attack_Interval: BASE_INTERVAL,
 	Attack_Damage:   4,
 	Defense:         1,

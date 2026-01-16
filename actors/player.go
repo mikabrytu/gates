@@ -91,6 +91,11 @@ func Player() {
 				damage := e.(game_events.EnemyAttackEvent).Damage
 				player_take_damage_listener(int(damage))
 			})
+
+			game_events.Bus.Subscribe(game_events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
+				player_is_concentrating = false
+				player_concentration_count = 0
+			})
 		},
 		Update: func() {
 			player_hp_rect.Width = (player_max_hp_width * player_health.GetCurrent()) / player_health.GetMax()
@@ -202,23 +207,26 @@ func player_spell_effect() spells.Effect {
 	}
 
 	roll := rand.IntN(100)
-	print(fmt.Sprintf(values.Blue+"Status roll: %v\n", roll))
 
 	if roll <= PLAYER_SPELL_EFFECT_CHANCE {
 		player_is_concentrating = true
 		player_concentration_count += 1
 
 		var effect_type spells.EffectType
+		name := ""
 		switch player_current_weapon.Type {
 		case weapons.Fire:
 			effect_type = spells.Burn
+			name = "Burn"
 		case weapons.Ice:
 			effect_type = spells.Cold
+			name = "Cold"
 		case weapons.Shock:
 			effect_type = spells.Paralysis
+			name = "Paralysis"
 		}
 
-		print(fmt.Sprintf(values.Yellow+"Player triggered spell effect: %v\n"+values.Reset, effect_type))
+		print(fmt.Sprintf(values.Yellow+"Player triggered spell effect: %v. Max Stack: %v\n"+values.Reset, name, player_skills.INT))
 
 		return spells.Effect{
 			Type:  effect_type,
@@ -275,31 +283,8 @@ func player_take_damage_listener(base_damage int) {
 	damage := utils1.CalcDamange(raw_damage, raw_damage/2)
 
 	if player_is_defending {
-		break_roll := rand.IntN(100)
-		break_chance := (damage * 100) / player_max_hp
-
-		if break_roll <= break_chance {
-			if player_current_weapon.Type == weapons.Physical {
-				player_is_stunned = true
-				print(fmt.Sprintf("%s", values.Yellow+"Player is Stunned\n"+values.Reset))
-
-				time.AfterFunc(time.Millisecond*time.Duration(PLAYER_STUN_DELAY), func() {
-					player_is_stunned = false
-				})
-
-				return
-			}
-
-			println("Player is using a magic attack and enemy broke defense. Concentration should stop now")
-			if player_is_concentrating {
-				player_is_concentrating = false
-				player_concentration_count = 0
-
-				println("Player is no longer concentrating and will publish a break event")
-
-				events.Emit(events.Game, game_events.PlayerBreakSpellEvent{})
-			}
-		}
+		player_negate_damage(damage)
+		return
 	}
 
 	message := values.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + values.Reset
@@ -319,6 +304,33 @@ func player_take_damage_listener(base_damage int) {
 		// })
 
 		lifecycle.Kill()
+	}
+}
+
+func player_negate_damage(damage int) {
+	break_roll := rand.IntN(100)
+	break_chance := (damage * 100) / player_max_hp
+
+	if break_roll <= break_chance {
+		print(fmt.Sprintf(values.Blue+"Break roll: %v | Break chance: %v\n"+values.Reset, break_roll, break_chance))
+
+		if player_current_weapon.Type == weapons.Physical {
+			player_is_stunned = true
+			print(fmt.Sprintf("%s", values.Yellow+"Player is Stunned\n"+values.Reset))
+
+			time.AfterFunc(time.Millisecond*time.Duration(PLAYER_STUN_DELAY), func() {
+				player_is_stunned = false
+			})
+		}
+
+		if player_is_concentrating {
+			player_is_concentrating = false
+			player_concentration_count = 0
+
+			println(values.Yellow + "Player is no longer concentrating and will publish a break event" + values.Reset)
+
+			events.Emit(events.Game, game_events.PlayerBreakSpellEvent{})
+		}
 	}
 }
 
