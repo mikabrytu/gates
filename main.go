@@ -109,7 +109,16 @@ func listeners() {
 		rounds += 1
 
 		// Player Level Up
-		if rounds == 1 || rounds == 4 || rounds == 7 || rounds == 13 || rounds == 19 || rounds == 22 || rounds == 25 {
+		if rounds == 1 ||
+			rounds == 4 ||
+			rounds == 7 ||
+			rounds == 10 ||
+			rounds == 13 ||
+			rounds == 16 ||
+			rounds == 19 ||
+			rounds == 22 ||
+			rounds == 25 {
+
 			actors.PlayerLevelUp()
 			show_level_up_text()
 		} else {
