@@ -30,6 +30,7 @@ var player_recovery_rect utils.RectSpecs
 var player_anim_position utils.RectSpecs
 var player_defense_rect utils.RectSpecs
 var player_attack_start_time time.Time
+var player_defense_start_time time.Time
 var player_max_hp int
 var player_max_hp_width int
 var player_concentration_count = 0
@@ -42,8 +43,7 @@ var player_is_stunned = false
 var player_is_concentrating = false
 
 const PLAYER_HP_PER_LEVEL int = 5
-const PLAYER_DEFENSE_DELAY int = 800
-const PLAYER_STUN_DELAY int = 5000
+const PLAYER_STUN_DELAY int = 6000
 const PLAYER_SPELL_EFFECT_CHANCE = 50
 
 func Player() {
@@ -281,7 +281,7 @@ func player_take_damage_listener(base_damage int) {
 	damage := max(base_damage/player_skills.STR, 1)
 
 	if player_is_defending {
-		player_negate_damage(damage)
+		player_negate_damage(base_damage)
 		return
 	}
 
@@ -309,6 +309,7 @@ func player_defend(enable bool) {
 	if enable {
 		player_is_defending = true
 		player_sprite.Disable()
+		player_defense_start_time = time.Now()
 	} else {
 		player_is_defending = false
 		player_sprite.Enable()
@@ -316,11 +317,20 @@ func player_defend(enable bool) {
 }
 
 func player_negate_damage(damage int) {
+	hold_time := int(time.Since(player_defense_start_time).Milliseconds())
+
 	break_roll := rand.IntN(100)
-	break_chance := (damage * 100) / player_max_hp
+	break_chance := (damage*100)/player_health.GetMax() + (max(hold_time, 1) / 100)
+
+	print(fmt.Sprintf(
+		values.Blue+"Player absorbed %v damange\nDefense held for %v.\nBreak roll: %v | Break chance: %v\n"+values.Reset,
+		damage,
+		hold_time,
+		break_roll,
+		break_chance,
+	))
 
 	if break_roll <= break_chance {
-		print(fmt.Sprintf(values.Blue+"Break roll: %v | Break chance: %v\n"+values.Reset, break_roll, break_chance))
 
 		if player_is_concentrating {
 			player_lost_concentration(true)
