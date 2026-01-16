@@ -333,6 +333,7 @@ func enemy_attack_task(interval int) {
 
 			if skip {
 				println(values.Yellow + "Enemy is paralyzed. Skipping attack" + values.Reset)
+				enemy_shake()
 			} else {
 				damage := enemy_specs.Attack_Damage
 
@@ -385,11 +386,31 @@ func enemy_scale(direction int) {
 		return
 	}
 
-	sprite_rect := enemy_sprite.GetRect()
-	enemy_anim_position.PosX = sprite_rect.PosX - 64*direction
-	enemy_anim_position.PosY = sprite_rect.PosY - 64*direction
-	enemy_anim_position.Width = sprite_rect.Width + 128*direction
-	enemy_anim_position.Height = sprite_rect.Height + 128*direction
+	enemy_anim_position.PosX -= 64 * direction
+	enemy_anim_position.PosY -= 64 * direction
+	enemy_anim_position.Width += 128 * direction
+	enemy_anim_position.Height += 128 * direction
+}
+
+func enemy_shake() {
+	if !enemy_is_alive {
+		return
+	}
+
+	og_pos := enemy_anim_position.PosX
+	enemy_anim_position.PosX += 64
+	time.AfterFunc(time.Millisecond*100, func() {
+		enemy_anim_position.PosX = og_pos - 64
+	})
+	time.AfterFunc(time.Millisecond*150, func() {
+		enemy_anim_position.PosX = og_pos + 64
+	})
+	time.AfterFunc(time.Millisecond*200, func() {
+		enemy_anim_position.PosX = og_pos - 64
+	})
+	time.AfterFunc(time.Millisecond*250, func() {
+		enemy_anim_position.PosX = og_pos
+	})
 }
 
 func enemy_show_damage_text(damage int, color render.Color) {
