@@ -69,8 +69,12 @@ func Player() {
 				}
 
 				if click.Index.Right == 1 {
-					player_defense_listener()
+					player_defend(true)
 				}
+			})
+
+			events.Subscribe(events.Input, events.INPUT_MOUSE_CLICK_UP, func(data any) {
+				player_defend(false)
 			})
 
 			// Level Up
@@ -273,16 +277,6 @@ func player_attack_listener() {
 	})
 }
 
-func player_defense_listener() {
-	player_is_defending = true
-	player_sprite.Disable()
-
-	time.AfterFunc(time.Millisecond*time.Duration(PLAYER_DEFENSE_DELAY), func() {
-		player_is_defending = false
-		player_sprite.Enable()
-	})
-}
-
 func player_take_damage_listener(base_damage int) {
 	damage := max(base_damage/player_skills.STR, 1)
 
@@ -308,6 +302,16 @@ func player_take_damage_listener(base_damage int) {
 		// })
 
 		lifecycle.Kill()
+	}
+}
+
+func player_defend(enable bool) {
+	if enable {
+		player_is_defending = true
+		player_sprite.Disable()
+	} else {
+		player_is_defending = false
+		player_sprite.Enable()
 	}
 }
 
