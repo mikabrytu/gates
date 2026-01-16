@@ -319,17 +319,17 @@ func player_negate_damage(damage int) {
 	if break_roll <= break_chance {
 		print(fmt.Sprintf(values.Blue+"Break roll: %v | Break chance: %v\n"+values.Reset, break_roll, break_chance))
 
-		if player_current_weapon.Type == weapons.Physical {
+		if player_is_concentrating {
+			player_lost_concentration(true)
+		}
+
+		if player_current_weapon.Type == weapons.Physical || player_current_weapon.Type == weapons.Shock {
 			player_is_stunned = true
 			print(fmt.Sprintf("%s", values.Yellow+"Player is Stunned\n"+values.Reset))
 
 			time.AfterFunc(time.Millisecond*time.Duration(PLAYER_STUN_DELAY), func() {
 				player_is_stunned = false
 			})
-		}
-
-		if player_is_concentrating {
-			player_lost_concentration(true)
 		}
 	}
 }
