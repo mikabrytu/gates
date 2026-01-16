@@ -19,5 +19,5 @@ func RunMap() {
 	}
 
 	tilemap := systems.NewTileMap(size, rect, offset)
-	tilemap.DrawMap()
+	tilemap.DrawFromFile("assets/images/sprites/rgb_10.png")
 }
