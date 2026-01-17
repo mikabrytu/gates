@@ -13,7 +13,7 @@ func RunMap() {
 	map_file := "assets/images/maps/map3x3.png"
 
 	scale := 128
-	offset := 4
+	offset := 0
 	size := math.Vector2{X: 3, Y: 3}
 	rect := utils.RectSpecs{
 		PosX:   (values.SCREEN_SIZE.X / 2) - ((scale * size.X) / 2) - ((offset * size.X) / 2),
@@ -36,7 +36,12 @@ func RunMap() {
 		{
 			Chan:       systems.B,
 			ChanValue:  255,
-			SpritePath: "assets/images/sprites/tile_simple.png",
+			SpritePath: "assets/images/sprites/tiles/tile_simple.png",
+		},
+		{
+			Chan:       systems.B,
+			ChanValue:  0,
+			SpritePath: "assets/images/sprites/tiles/wall_simple.png",
 		},
 	}
 
