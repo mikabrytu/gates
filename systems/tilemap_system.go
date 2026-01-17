@@ -1,15 +1,24 @@
 package systems
 
 import (
+	"fmt"
 	"image"
 	"image/png"
-	"io"
 	"os"
 
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
 	"github.com/mikabrytu/gomes-engine/utils"
+)
+
+type Channel int
+
+const (
+	R Channel = iota
+	G
+	B
+	A
 )
 
 type Pixel struct {
@@ -20,15 +29,25 @@ type Pixel struct {
 }
 
 type Tile struct {
-	Coord math.Vector2
-	Rect  utils.RectSpecs
-	Color render.Color
+	Coord    math.Vector2
+	Rect     utils.RectSpecs
+	Sprite   *render.Sprite
+	Color    render.Color
+	HasEnemy bool
+	HasItem  bool
+}
+
+type TileRules struct {
+	Chan       Channel
+	ChanValue  uint8
+	SpritePath string
+	Color      render.Color
 }
 
 type TileMap struct {
-	Tiles      [][]*Tile
-	instance   *lifecycle.GameObject
-	can_render bool
+	Tiles       [][]*Tile
+	instance    *lifecycle.GameObject
+	render_rect bool
 }
 
 func NewTileMap(map_size math.Vector2, tile_rect utils.RectSpecs, offset int) *TileMap {
@@ -42,8 +61,10 @@ func NewTileMap(map_size math.Vector2, tile_rect utils.RectSpecs, offset int) *T
 			rect.PosY += y * (tile_rect.Height + offset)
 
 			row = append(row, &Tile{
-				Coord: math.Vector2{X: x, Y: y},
-				Rect:  rect,
+				Coord:    math.Vector2{X: x, Y: y},
+				Rect:     rect,
+				HasEnemy: false,
+				HasItem:  false,
 			})
 		}
 
@@ -51,27 +72,19 @@ func NewTileMap(map_size math.Vector2, tile_rect utils.RectSpecs, offset int) *T
 	}
 
 	tilemap := &TileMap{
-		Tiles:      tiles,
-		can_render: false,
+		Tiles:       tiles,
+		render_rect: false,
 	}
 
 	tilemap.instance = lifecycle.Register(&lifecycle.GameObject{
-		Render: tilemap.render,
+		Render:  tilemap.render,
+		Destroy: tilemap.destroy,
 	})
 
 	return tilemap
 }
 
-func (m *TileMap) DrawFromFile(path string) {
-	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
-
-	file, err := os.Open(path)
-	if err != nil {
-		os.Exit(1)
-		panic(err)
-	}
-	defer file.Close()
-
+func (m *TileMap) DrawMapFile(file string) {
 	pixels, err := getPixels(file)
 	if err != nil {
 		os.Exit(1)
@@ -89,26 +102,98 @@ func (m *TileMap) DrawFromFile(path string) {
 		}
 	}
 
-	m.can_render = true
+	m.render_rect = true
 }
 
-func (m *TileMap) DrawMap() {
-	m.can_render = true
-}
-
-func (m *TileMap) render() {
-	if !m.can_render {
-		return
+func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
+	pixels, err := getPixels(file)
+	if err != nil {
+		panic(err)
 	}
 
-	for _, row := range m.Tiles {
-		for _, tile := range row {
-			render.DrawRect(tile.Rect, tile.Color)
+	for i, row := range m.Tiles {
+		for j, tile := range row {
+			for _, r := range rules {
+				switch r.Chan {
+				case R:
+					if pixels[i][j].R == r.ChanValue {
+						tile.HasEnemy = true
+						tile.Color = r.Color
+					}
+				case G:
+					if pixels[i][j].G == r.ChanValue {
+						tile.HasItem = true
+						tile.Color = r.Color
+					}
+				case B:
+					if pixels[i][j].B == r.ChanValue {
+						sprite := render.NewSprite(
+							fmt.Sprintf("tile-%v-%v-tile", i, j),
+							r.SpritePath,
+							tile.Rect,
+							render.White,
+						)
+						sprite.Init()
+
+						tile.Sprite = sprite
+					}
+				}
+			}
 		}
 	}
 }
 
-func getPixels(file io.Reader) ([][]Pixel, error) {
+func (m *TileMap) DrawMap() {
+	m.render_rect = true
+}
+
+func (m *TileMap) GetMap() [][]*Tile {
+	return m.Tiles
+}
+
+func (m *TileMap) render() {
+	for _, row := range m.Tiles {
+		for _, tile := range row {
+			rect := utils.RectSpecs{
+				PosX:   tile.Rect.PosX + (tile.Rect.Width / 4),
+				PosY:   tile.Rect.PosY + (tile.Rect.Height / 4),
+				Width:  tile.Rect.Width / 2,
+				Height: tile.Rect.Height / 2,
+			}
+
+			if m.render_rect {
+				render.DrawRect(tile.Rect, tile.Color)
+			}
+
+			if tile.HasEnemy {
+				render.DrawRect(rect, tile.Color)
+			}
+
+			if tile.HasItem {
+				render.DrawRect(rect, tile.Color)
+			}
+		}
+	}
+}
+
+func (m *TileMap) destroy() {
+	for _, row := range m.Tiles {
+		for _, tile := range row {
+			tile.Sprite.Clear()
+		}
+	}
+}
+
+func getPixels(path string) ([][]Pixel, error) {
+	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
+
+	file, err := os.Open(path)
+	if err != nil {
+		os.Exit(1)
+		panic(err)
+	}
+	defer file.Close()
+
 	img, _, err := image.Decode(file)
 
 	if err != nil {
@@ -126,6 +211,8 @@ func getPixels(file io.Reader) ([][]Pixel, error) {
 		}
 		pixels = append(pixels, row)
 	}
+
+	//fmt.Println(pixels)
 
 	return pixels, nil
 }
