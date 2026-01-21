@@ -15,9 +15,9 @@ var tilemap *systems.TileMap
 var player_rect utils.RectSpecs
 var player_coord math.Vector2
 
-var MAP_SIZE = math.Vector2{X: 3, Y: 3}
+var MAP_SIZE = math.Vector2{X: 9, Y: 9}
 
-const SCALE int = 128
+const SCALE int = 96
 
 func RunMap() {
 	drawMap()
@@ -25,7 +25,7 @@ func RunMap() {
 }
 
 func drawMap() {
-	map_file := "assets/images/maps/map3x3.png"
+	map_file := "assets/images/maps/map9x9.png"
 
 	offset := 1
 	rect := utils.RectSpecs{
@@ -74,6 +74,8 @@ func init_player() {
 		Height: SCALE / 2,
 	}
 
+	show_adjacent()
+
 	lifecycle.Register(&lifecycle.GameObject{
 		Start: func() {
 			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_W, func(data any) {
@@ -121,4 +123,32 @@ func move_player(coord math.Vector2) {
 
 	player_rect.PosX = tile.Rect.PosX + (SCALE / 4)
 	player_rect.PosY = tile.Rect.PosY + (SCALE / 4)
+
+	show_adjacent()
+}
+
+func show_adjacent() {
+	adjacent := []math.Vector2{
+		{X: player_coord.X, Y: player_coord.Y - 1},
+		{X: player_coord.X + 1, Y: player_coord.Y - 1},
+		{X: player_coord.X - 1, Y: player_coord.Y - 1},
+		{X: player_coord.X - 1, Y: player_coord.Y},
+		{X: player_coord.X + 1, Y: player_coord.Y},
+		{X: player_coord.X, Y: player_coord.Y + 1},
+		{X: player_coord.X + 1, Y: player_coord.Y + 1},
+		{X: player_coord.X - 1, Y: player_coord.Y + 1},
+	}
+
+	for _, coord := range adjacent {
+		if coord.X >= MAP_SIZE.X ||
+			coord.X < 0 ||
+			coord.Y >= MAP_SIZE.Y ||
+			coord.Y < 0 {
+			continue
+		}
+
+		tile := tilemap.Tiles[coord.Y][coord.X]
+		tile.Sprite.Enable()
+		tile.Enabled = true
+	}
 }

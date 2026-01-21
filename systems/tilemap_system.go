@@ -122,13 +122,13 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 				case R:
 					if pixels[i][j].R == r.ChanValue {
 						tile.HasEnemy = true
-						tile.Enabled = true
+						tile.Enabled = false
 						tile.Color = r.Color
 					}
 				case G:
 					if pixels[i][j].G == r.ChanValue {
 						tile.HasItem = true
-						tile.Enabled = true
+						tile.Enabled = false
 						tile.Color = r.Color
 					}
 				case B:
@@ -140,6 +140,7 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 							render.White,
 						)
 						sprite.Init()
+						sprite.Disable()
 
 						tile.Sprite = sprite
 						tile.IsWalkable = r.Walkable
