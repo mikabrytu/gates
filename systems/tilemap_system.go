@@ -29,12 +29,14 @@ type Pixel struct {
 }
 
 type Tile struct {
-	Coord    math.Vector2
-	Rect     utils.RectSpecs
-	Sprite   *render.Sprite
-	Color    render.Color
-	HasEnemy bool
-	HasItem  bool
+	Coord      math.Vector2
+	Rect       utils.RectSpecs
+	Sprite     *render.Sprite
+	Color      render.Color
+	HasEnemy   bool
+	HasItem    bool
+	IsWalkable bool
+	Enabled    bool
 }
 
 type TileRules struct {
@@ -42,6 +44,7 @@ type TileRules struct {
 	ChanValue  uint8
 	SpritePath string
 	Color      render.Color
+	Walkable   bool
 }
 
 type TileMap struct {
@@ -65,6 +68,7 @@ func NewTileMap(map_size math.Vector2, tile_rect utils.RectSpecs, offset int) *T
 				Rect:     rect,
 				HasEnemy: false,
 				HasItem:  false,
+				Enabled:  false,
 			})
 		}
 
@@ -118,11 +122,13 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 				case R:
 					if pixels[i][j].R == r.ChanValue {
 						tile.HasEnemy = true
+						tile.Enabled = true
 						tile.Color = r.Color
 					}
 				case G:
 					if pixels[i][j].G == r.ChanValue {
 						tile.HasItem = true
+						tile.Enabled = true
 						tile.Color = r.Color
 					}
 				case B:
@@ -136,6 +142,7 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 						sprite.Init()
 
 						tile.Sprite = sprite
+						tile.IsWalkable = r.Walkable
 					}
 				}
 			}
@@ -145,10 +152,6 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 
 func (m *TileMap) DrawMap() {
 	m.render_rect = true
-}
-
-func (m *TileMap) GetMap() [][]*Tile {
-	return m.Tiles
 }
 
 func (m *TileMap) render() {
@@ -165,12 +168,14 @@ func (m *TileMap) render() {
 				render.DrawRect(tile.Rect, tile.Color)
 			}
 
-			if tile.HasEnemy {
-				render.DrawRect(rect, tile.Color)
-			}
+			if tile.Enabled {
+				if tile.HasEnemy {
+					render.DrawRect(rect, tile.Color)
+				}
 
-			if tile.HasItem {
-				render.DrawRect(rect, tile.Color)
+				if tile.HasItem {
+					render.DrawRect(rect, tile.Color)
+				}
 			}
 		}
 	}
