@@ -4,6 +4,7 @@ import (
 	"gates/systems"
 	"gates/values"
 
+	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
@@ -11,6 +12,8 @@ import (
 )
 
 var tilemap *systems.TileMap
+var player_rect utils.RectSpecs
+var player_coord math.Vector2
 
 var MAP_SIZE = math.Vector2{X: 3, Y: 3}
 
@@ -18,7 +21,7 @@ const SCALE int = 128
 
 func RunMap() {
 	drawMap()
-	initPlayer()
+	init_player()
 }
 
 func drawMap() {
@@ -47,11 +50,13 @@ func drawMap() {
 			Chan:       systems.B,
 			ChanValue:  255,
 			SpritePath: "assets/images/sprites/tiles/tile_simple.png",
+			Walkable:   true,
 		},
 		{
 			Chan:       systems.B,
 			ChanValue:  0,
 			SpritePath: "assets/images/sprites/tiles/wall_simple.png",
+			Walkable:   false,
 		},
 	}
 
@@ -59,18 +64,61 @@ func drawMap() {
 	tilemap.DrawMapAssetsFromFile(rules, map_file)
 }
 
-func initPlayer() {
-	start_tile_rect := tilemap.Tiles[MAP_SIZE.Y-1][MAP_SIZE.X/2].Rect
-	rect := utils.RectSpecs{
-		PosX:   start_tile_rect.PosX + (SCALE / 4),
-		PosY:   start_tile_rect.PosY + (SCALE / 4),
+func init_player() {
+	tile := tilemap.Tiles[MAP_SIZE.Y-1][MAP_SIZE.X/2]
+	player_coord = tile.Coord
+	player_rect = utils.RectSpecs{
+		PosX:   tile.Rect.PosX + (SCALE / 4),
+		PosY:   tile.Rect.PosY + (SCALE / 4),
 		Width:  SCALE / 2,
 		Height: SCALE / 2,
 	}
 
 	lifecycle.Register(&lifecycle.GameObject{
+		Start: func() {
+			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_W, func(data any) {
+				move_player(math.Vector2{X: 0, Y: -1})
+			})
+			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_S, func(data any) {
+				move_player(math.Vector2{X: 0, Y: 1})
+			})
+			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_D, func(data any) {
+				move_player(math.Vector2{X: 1, Y: 0})
+			})
+			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_A, func(data any) {
+				move_player(math.Vector2{X: -1, Y: 0})
+			})
+		},
 		Render: func() {
-			render.DrawRect(rect, render.Green)
+			render.DrawRect(player_rect, render.Green)
+
+			tile := tilemap.Tiles[player_coord.Y][player_coord.X]
+			if tile.HasEnemy || tile.HasItem {
+				tile.Enabled = false
+			}
 		},
 	})
+}
+
+func move_player(coord math.Vector2) {
+	if (player_coord.X+coord.X) >= MAP_SIZE.X ||
+		(player_coord.X+coord.X) < 0 ||
+		(player_coord.Y+coord.Y) >= MAP_SIZE.Y ||
+		(player_coord.Y+coord.Y) < 0 {
+		println("Trying to move out of bounds. Stopping player movement")
+		return
+	}
+
+	tile := tilemap.Tiles[player_coord.Y+coord.Y][player_coord.X+coord.X]
+
+	if !tile.IsWalkable {
+		println("Player is trying to move to a wall. Stopping movement")
+		return
+	}
+
+	player_coord.X += coord.X
+	player_coord.Y += coord.Y
+
+	player_rect.PosX = tile.Rect.PosX + (SCALE / 4)
+	player_rect.PosY = tile.Rect.PosY + (SCALE / 4)
 }
