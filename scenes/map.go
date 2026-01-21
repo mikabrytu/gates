@@ -4,22 +4,32 @@ import (
 	"gates/systems"
 	"gates/values"
 
+	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
+var tilemap *systems.TileMap
+
+var MAP_SIZE = math.Vector2{X: 3, Y: 3}
+
+const SCALE int = 128
+
 func RunMap() {
+	drawMap()
+	initPlayer()
+}
+
+func drawMap() {
 	map_file := "assets/images/maps/map3x3.png"
 
-	scale := 128
-	offset := 0
-	size := math.Vector2{X: 3, Y: 3}
+	offset := 1
 	rect := utils.RectSpecs{
-		PosX:   (values.SCREEN_SIZE.X / 2) - ((scale * size.X) / 2) - ((offset * size.X) / 2),
-		PosY:   (values.SCREEN_SIZE.Y / 2) - ((scale * size.Y) / 2) - ((offset * size.Y) / 2),
-		Width:  scale,
-		Height: scale,
+		PosX:   (values.SCREEN_SIZE.X / 2) - ((SCALE * MAP_SIZE.X) / 2) - ((offset * MAP_SIZE.X) / 2),
+		PosY:   (values.SCREEN_SIZE.Y / 2) - ((SCALE * MAP_SIZE.Y) / 2) - ((offset * MAP_SIZE.Y) / 2),
+		Width:  SCALE,
+		Height: SCALE,
 	}
 
 	rules := []systems.TileRules{
@@ -45,6 +55,22 @@ func RunMap() {
 		},
 	}
 
-	tilemap := systems.NewTileMap(size, rect, offset)
+	tilemap = systems.NewTileMap(MAP_SIZE, rect, offset)
 	tilemap.DrawMapAssetsFromFile(rules, map_file)
+}
+
+func initPlayer() {
+	start_tile_rect := tilemap.Tiles[MAP_SIZE.Y-1][MAP_SIZE.X/2].Rect
+	rect := utils.RectSpecs{
+		PosX:   start_tile_rect.PosX + (SCALE / 4),
+		PosY:   start_tile_rect.PosY + (SCALE / 4),
+		Width:  SCALE / 2,
+		Height: SCALE / 2,
+	}
+
+	lifecycle.Register(&lifecycle.GameObject{
+		Render: func() {
+			render.DrawRect(rect, render.Green)
+		},
+	})
 }
