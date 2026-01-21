@@ -8,6 +8,7 @@ import (
 	gomesengine "github.com/mikabrytu/gomes-engine"
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
+	"github.com/mikabrytu/gomes-engine/render"
 )
 
 func main() {
@@ -26,6 +27,7 @@ func game() {
 }
 
 func settings() {
+	render.SetBackgroundColor(render.Color{R: 25, G: 20, B: 43, A: 255})
 	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_ESCAPE, func(data any) {
 		lifecycle.Kill()
 	})

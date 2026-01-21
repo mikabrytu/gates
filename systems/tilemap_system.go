@@ -133,6 +133,12 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 					}
 				case B:
 					if pixels[i][j].B == r.ChanValue {
+						tile.IsWalkable = r.Walkable
+
+						if r.SpritePath == "" {
+							continue
+						}
+
 						sprite := render.NewSprite(
 							fmt.Sprintf("tile-%v-%v-tile", i, j),
 							r.SpritePath,
@@ -143,7 +149,6 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 						sprite.Disable()
 
 						tile.Sprite = sprite
-						tile.IsWalkable = r.Walkable
 					}
 				}
 			}
