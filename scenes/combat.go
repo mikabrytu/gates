@@ -7,6 +7,7 @@ import (
 	"gates/actors/weapons"
 	game_events "gates/events"
 	"gates/values"
+	"time"
 
 	"github.com/Papiermond/eventbus"
 	"github.com/mikabrytu/gomes-engine/events"
@@ -24,6 +25,7 @@ const (
 	Stopped
 )
 
+var initialized bool = false
 var game_state GameState
 var weapons_fonts [6]*render.Font
 var skills_fonts [4]*render.Font
@@ -31,9 +33,15 @@ var continue_font *render.Font
 var rounds int
 
 func RunCombat() {
-	listeners()
-	show_weapon_text()
+	if !initialized {
+		initialized = true
 
+		time.AfterFunc(time.Millisecond*1500, func() {
+			listeners()
+		})
+	}
+
+	show_weapon_text()
 	game_state = Preparing
 }
 

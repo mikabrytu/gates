@@ -135,6 +135,14 @@ func move_player(coord math.Vector2) {
 	player_rect.PosY = tile.Rect.PosY + (SCALE / 4)
 
 	show_adjacent()
+
+	if tile.HasEnemy {
+		start_combat()
+	}
+}
+
+func start_combat() {
+	RunCombat()
 }
 
 func show_adjacent() {
