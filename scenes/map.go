@@ -37,6 +37,41 @@ func drawMap() {
 
 	tilemap = systems.NewTileMap(MAP_SIZE, rect, offset)
 	tilemap.DrawMapAssetsFromFile(RULES, map_file)
+
+	map_walls := []utils.RectSpecs{
+		{
+			PosX:   (values.SCREEN_SIZE.X / 2) - ((SCALE * MAP_SIZE.X) / 2) - ((offset * MAP_SIZE.X) / 2) - 4,
+			PosY:   (values.SCREEN_SIZE.Y / 2) - ((SCALE * MAP_SIZE.Y) / 2) - ((offset * MAP_SIZE.Y) / 2),
+			Width:  4,
+			Height: SCALE * (MAP_SIZE.Y + offset),
+		},
+		{
+			PosX:   (values.SCREEN_SIZE.X / 2) + ((SCALE * MAP_SIZE.X) / 2) + ((offset * MAP_SIZE.X) / 2) + 4,
+			PosY:   (values.SCREEN_SIZE.Y / 2) - ((SCALE * MAP_SIZE.Y) / 2) - ((offset * MAP_SIZE.Y) / 2),
+			Width:  4,
+			Height: SCALE * (MAP_SIZE.Y + offset),
+		},
+		{
+			PosX:   (values.SCREEN_SIZE.X / 2) - ((SCALE * MAP_SIZE.X) / 2) - ((offset * MAP_SIZE.X) / 2) - 4,
+			PosY:   (values.SCREEN_SIZE.Y / 2) - ((SCALE * MAP_SIZE.Y) / 2) - ((offset * MAP_SIZE.Y) / 2) - 4,
+			Width:  SCALE*(MAP_SIZE.X+offset) + 12,
+			Height: 4,
+		},
+		{
+			PosX:   (values.SCREEN_SIZE.X / 2) - ((SCALE * MAP_SIZE.X) / 2) - ((offset * MAP_SIZE.X) / 2) - 4,
+			PosY:   (values.SCREEN_SIZE.Y / 2) + ((SCALE * MAP_SIZE.Y) / 2) + ((offset * MAP_SIZE.Y) / 2),
+			Width:  SCALE*(MAP_SIZE.X+offset) + 12,
+			Height: 4,
+		},
+	}
+
+	lifecycle.Register(&lifecycle.GameObject{
+		Render: func() {
+			for _, wall := range map_walls {
+				render.DrawRect(wall, render.White)
+			}
+		},
+	})
 }
 
 func init_player() {
