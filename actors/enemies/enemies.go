@@ -15,7 +15,7 @@ const BASE_INTERVAL = 3000
 
 var Rat = EnemySpecs{
 	Name:            "Rat",
-	Image_Path:      "assets/images/sprites/rat.png",
+	Image_Path:      "assets/images/sprites/enemies/rat.png",
 	Size:            SPRITE_SIZE,
 	HP:              10,
 	Attack_Interval: BASE_INTERVAL,
@@ -25,7 +25,7 @@ var Rat = EnemySpecs{
 
 var Wolf = EnemySpecs{
 	Name:            "Wolf",
-	Image_Path:      "assets/images/sprites/wolf.png",
+	Image_Path:      "assets/images/sprites/enemies/wolf.png",
 	Size:            SPRITE_SIZE,
 	HP:              16,
 	Attack_Interval: BASE_INTERVAL,
@@ -35,7 +35,7 @@ var Wolf = EnemySpecs{
 
 var Zombie = EnemySpecs{
 	Name:            "Zombie",
-	Image_Path:      "assets/images/sprites/zombie.png",
+	Image_Path:      "assets/images/sprites/enemies/zombie.png",
 	Size:            SPRITE_SIZE,
 	HP:              28,
 	Attack_Interval: 2500,
@@ -45,7 +45,7 @@ var Zombie = EnemySpecs{
 
 var Goblin = EnemySpecs{
 	Name:            "Goblin",
-	Image_Path:      "assets/images/sprites/goblin.png",
+	Image_Path:      "assets/images/sprites/enemies/goblin.png",
 	Size:            SPRITE_SIZE,
 	HP:              38,
 	Attack_Interval: 2250,
@@ -55,7 +55,7 @@ var Goblin = EnemySpecs{
 
 var Skeleton = EnemySpecs{
 	Name:            "Skeleton",
-	Image_Path:      "assets/images/sprites/skeleton.png",
+	Image_Path:      "assets/images/sprites/enemies/skeleton.png",
 	Size:            SPRITE_SIZE,
 	HP:              48,
 	Attack_Interval: 2000,
@@ -65,7 +65,7 @@ var Skeleton = EnemySpecs{
 
 var Bandit = EnemySpecs{
 	Name:            "Bandit",
-	Image_Path:      "assets/images/sprites/bandit.png",
+	Image_Path:      "assets/images/sprites/enemies/bandit.png",
 	Size:            SPRITE_SIZE,
 	HP:              58,
 	Attack_Interval: 1700,
@@ -75,7 +75,7 @@ var Bandit = EnemySpecs{
 
 var Orc = EnemySpecs{
 	Name:            "Orc",
-	Image_Path:      "assets/images/sprites/orc.png",
+	Image_Path:      "assets/images/sprites/enemies/orc.png",
 	Size:            SPRITE_SIZE,
 	HP:              60,
 	Attack_Interval: 1500,
@@ -85,7 +85,7 @@ var Orc = EnemySpecs{
 
 var Werewolf = EnemySpecs{
 	Name:            "Werewolf",
-	Image_Path:      "assets/images/sprites/werewolf.png",
+	Image_Path:      "assets/images/sprites/enemies/werewolf.png",
 	Size:            SPRITE_SIZE,
 	HP:              76,
 	Attack_Interval: 1000,
@@ -95,7 +95,7 @@ var Werewolf = EnemySpecs{
 
 var Vampire = EnemySpecs{
 	Name:            "Vampire",
-	Image_Path:      "assets/images/sprites/vampire.png",
+	Image_Path:      "assets/images/sprites/enemies/vampire.png",
 	Size:            SPRITE_SIZE,
 	HP:              106,
 	Attack_Interval: 750,

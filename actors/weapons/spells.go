@@ -7,7 +7,7 @@ import (
 var FireSpell = Weapon{
 	Name:         "Fire Spell",
 	Type:         Fire,
-	SpritePath:   "assets/images/sprites/fire_spell.png",
+	SpritePath:   "assets/images/sprites/weapons/fire_spell.png",
 	SpriteSize:   math.Vector2{X: 76 * SPRITE_SIZE_MULTIPLIER, Y: 48 * SPRITE_SIZE_MULTIPLIER},
 	SpriteOffset: math.Vector2{X: 0, Y: 0},
 	Damage:       6,
@@ -17,7 +17,7 @@ var FireSpell = Weapon{
 var IceSpell = Weapon{
 	Name:         "Ice Spell",
 	Type:         Ice,
-	SpritePath:   "assets/images/sprites/ice_spell.png",
+	SpritePath:   "assets/images/sprites/weapons/ice_spell.png",
 	SpriteSize:   math.Vector2{X: 76 * SPRITE_SIZE_MULTIPLIER, Y: 48 * SPRITE_SIZE_MULTIPLIER},
 	SpriteOffset: math.Vector2{X: 0, Y: 0},
 	Damage:       6,
@@ -27,7 +27,7 @@ var IceSpell = Weapon{
 var ShockSpell = Weapon{
 	Name:         "Shock Spell",
 	Type:         Shock,
-	SpritePath:   "assets/images/sprites/shock_spell.png",
+	SpritePath:   "assets/images/sprites/weapons/shock_spell.png",
 	SpriteSize:   math.Vector2{X: 76 * SPRITE_SIZE_MULTIPLIER, Y: 48 * SPRITE_SIZE_MULTIPLIER},
 	SpriteOffset: math.Vector2{X: 0, Y: 0},
 	Damage:       6,
