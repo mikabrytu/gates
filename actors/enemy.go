@@ -129,8 +129,9 @@ func enemy_init() {
 	enemy_burn_damage = 0
 
 	enemy_damage_ui_text = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
-	enemy_damage_ui_text.Init("10", render.Transparent, math.Vector2{X: 0, Y: 0})
+	enemy_damage_ui_text.Init("0", render.White, math.Vector2{X: 0, Y: 0})
 	enemy_damage_ui_text.AlignText(render.TopCenter, math.Vector2{X: 0, Y: 32})
+	enemy_damage_ui_text.Disable()
 
 	if enemy_sprite == nil {
 		enemy_sprite = render.NewSprite(
@@ -413,7 +414,8 @@ func enemy_shake() {
 func enemy_show_damage_text(damage int, color render.Color) {
 	enemy_damage_ui_text.UpdateText(fmt.Sprint(damage))
 	enemy_damage_ui_text.UpdateColor(color)
+	enemy_damage_ui_text.Enable()
 	time.AfterFunc(time.Millisecond*1200, func() {
-		enemy_damage_ui_text.UpdateColor(render.Transparent)
+		enemy_damage_ui_text.Disable()
 	})
 }

@@ -196,8 +196,9 @@ func player_init() {
 
 	if player_damage_ui_text == nil {
 		player_damage_ui_text = render.NewFont(values.FONT_SPECS, values.SCREEN_SIZE)
-		player_damage_ui_text.Init("10", render.Transparent, math.Vector2{X: 0, Y: 0})
+		player_damage_ui_text.Init("0", render.White, math.Vector2{X: 0, Y: 0})
 		player_damage_ui_text.AlignText(render.BottomCenter, math.Vector2{X: 0, Y: 96})
+		player_damage_ui_text.Disable()
 	}
 }
 
@@ -291,9 +292,9 @@ func player_take_damage_listener(base_damage int) {
 	player_health.TakeDamage(damage)
 
 	player_damage_ui_text.UpdateText(fmt.Sprint(damage))
-	player_damage_ui_text.UpdateColor(render.White)
+	player_damage_ui_text.Enable()
 	time.AfterFunc(time.Millisecond*1200, func() {
-		player_damage_ui_text.UpdateColor(render.Transparent)
+		player_damage_ui_text.Disable()
 	})
 
 	if player_health.GetCurrent() <= 0 {
