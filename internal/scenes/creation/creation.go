@@ -1,8 +1,11 @@
 package creation
 
 import (
+	"fmt"
 	"gates/config"
+	data "gates/internal/data/weapons"
 	"gates/internal/events"
+	"gates/pkg/skill"
 
 	gomesevents "github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/math"
@@ -14,14 +17,16 @@ type CreationState int
 const (
 	Race CreationState = iota
 	Class
-	Weapon
+	Equipment
 )
 
 var state CreationState
 var fonts [6]*render.Font
+var character skill.Skill
 
 func Init() {
 	state = Race
+	character = skill.Skill{}
 
 	register_events()
 	init_fonts()
@@ -62,7 +67,7 @@ func register_events() {
 }
 
 func init_fonts() {
-	for i := 0; i < len(fonts); i++ {
+	for i := range len(fonts) {
 		fonts[i] = render.NewFont(config.FONT_SPECS, config.SCREEN_SIZE)
 		fonts[i].Init("0", render.White, math.Vector2{X: 0, Y: 0})
 		fonts[i].Disable()
@@ -70,18 +75,53 @@ func init_fonts() {
 }
 
 func option_listener(option int) {
+	if state != Equipment {
+		switch option {
+		case 1:
+			character.STR += 1
+		case 2:
+			character.INT += 1
+		case 3:
+			character.SPD += 1
+		}
+	}
+
 	switch state {
 	case Race:
 		state = Class
 		prepare_class_text()
 	case Class:
-		state = Weapon
+		state = Equipment
 		prepare_weapon_text()
-	case Weapon:
-		// TODO: Save player choices to apply on player actor at combat scene
+	case Equipment:
+		message := fmt.Sprintf(
+			"Character Created! Attributes: { STR: %v, INT: %v, SPD: %v }\n",
+			character.STR,
+			character.INT,
+			character.SPD,
+		)
+		print(config.Yellow + message + config.Reset)
+
+		var weapon data.Weapon = data.Weapon{}
+		switch option {
+		case 1:
+			weapon = data.Sword
+		case 2:
+			weapon = data.Bow
+		case 3:
+			weapon = data.FireSpell
+		case 4:
+			weapon = data.IceSpell
+		case 5:
+			weapon = data.ShockSpell
+		}
 
 		gomesevents.Emit(gomesevents.Game, events.SceneChangeEvent{
 			Scene: config.SCENE_CREATION,
+			Data: []any{
+				character,
+				weapon,
+			},
 		})
 	}
 }
