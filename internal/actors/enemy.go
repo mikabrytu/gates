@@ -18,189 +18,212 @@ import (
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
-var enemy_specs data.EnemySpecs
-var enemy_go *lifecycle.GameObject
-var enemy_sprite *render.Sprite
-var enemy_health *health.Health
-var enemy_damage_ui_text *render.Font
-var enemy_hp_rect utils.RectSpecs
-var enemy_anim_position utils.RectSpecs
-var enemy_effect_icons []spells.EffectIcon
-var enemy_hp_max_width int
-var enemy_stack_count int
-var enemy_burn_damage int
-var enemy_is_alive bool = false
-var enemy_is_burn = false
-var enemy_is_cold = false
-var enemy_is_paralized = false
-var enemy_attack_done = make(chan bool)
-var enemy_burn_done = make(chan bool)
+type Enemy struct {
+	specs          data.EnemySpecs
+	instance       *lifecycle.GameObject
+	sprite         *render.Sprite
+	health         *health.Health
+	damage_ui_text *render.Font
+	hp_rect        utils.RectSpecs
+	anim_position  utils.RectSpecs
+	effect_icons   []spells.EffectIcon
+	hp_max_width   int
+	stack_count    int
+	burn_damage    int
+	is_alive       bool
+	is_burn        bool
+	is_cold        bool
+	is_paralized   bool
+	attack_done    chan bool
+	burn_done      chan bool
+}
 
-func Enemy() {
-	// CRASH: There's a bug with the event system that blocks the main thread when subscribing to more events on this file (maybe package?)
-	// I need to debug the event system to see what's going on
+func NewEnemy() *Enemy {
+	enemy := &Enemy{
+		effect_icons: make([]spells.EffectIcon, 0),
+		stack_count:  0,
+		burn_damage:  0,
+		is_alive:     false,
+		is_burn:      false,
+		is_cold:      false,
+		is_paralized: false,
+		attack_done:  make(chan bool),
+		burn_done:    make(chan bool),
+	}
 
-	enemy_init()
-	enemy_respawn()
+	enemy.damage_ui_text = render.NewFont(config.FONT_SPECS, config.SCREEN_SIZE)
+	enemy.damage_ui_text.Init("0", render.White, gomesmath.Vector2{X: 0, Y: 0})
+	enemy.damage_ui_text.AlignText(render.TopCenter, gomesmath.Vector2{X: 0, Y: 32})
+	enemy.damage_ui_text.Disable()
+
+	events.Bus.Subscribe(events.GAME_RESTART_EVENT, func(e eventbus.Event) {
+		if enemy.is_alive {
+			println("Enemy is already alive. Skipping respawn")
+			return
+		}
+
+		if enemy.instance != nil {
+			go func() {
+				enemy.attack_done = make(chan bool)
+			}()
+
+			enemy.Enable()
+		}
+	})
 
 	events.Bus.Subscribe(events.GAME_OVER_EVENT, func(e eventbus.Event) {
-		if !enemy_is_alive {
+		if !enemy.is_alive {
 			return
 		}
 
 		println(e.(events.GameOverEvent).Message)
-		enemy_stop()
+		enemy.stop()
 	})
 
-	enemy_go = lifecycle.Register(&lifecycle.GameObject{
-		Start: func() {
-			enemy_sprite.Init()
+	enemy.instance = lifecycle.Register(&lifecycle.GameObject{
+		Start:   enemy.start,
+		Update:  enemy.update,
+		Render:  enemy.render,
+		Destroy: enemy.destroy,
+	})
 
-			events.Bus.Subscribe(events.PLAYER_ATTACK_EVENT, func(e eventbus.Event) {
-				damage := e.(events.PlayerAttackEvent).Damage
-				effect := e.(events.PlayerAttackEvent).Effect
+	return enemy
+}
 
-				enemy_take_damage(damage, effect)
-			})
+func (e *Enemy) start() {
+	events.Bus.Subscribe(events.PLAYER_ATTACK_EVENT, func(data eventbus.Event) {
+		damage := data.(events.PlayerAttackEvent).Damage
+		effect := data.(events.PlayerAttackEvent).Effect
 
-			gomesevents.Subscribe(gomesevents.Game, events.PLAYER_BREAK_SPELL_EVENT, func(data any) {
-				println(config.Magenta + "Enemy knows the player is not concentrating anymore. All effects should stop now" + config.Reset)
-				enemy_reset_effects()
-			})
-		},
-		Update: func() {
-			enemy_hp_rect.Width = (enemy_hp_max_width * enemy_health.GetCurrent()) / enemy_specs.HP
-		},
-		Render: func() {
-			render.DrawRect(enemy_hp_rect, render.Red)
-			enemy_sprite.UpdateRect(enemy_anim_position)
+		e.take_damage(damage, effect)
+	})
 
-			if enemy_is_burn || enemy_is_cold || enemy_is_paralized {
-				for i, icon := range enemy_effect_icons {
-					icon.Rect.PosX = enemy_hp_rect.PosX + (i * (32 + 8))
-					icon.Rect.PosY = enemy_hp_rect.PosY + enemy_hp_rect.Height + 8
-					icon.Rect.Width = 32
-					icon.Rect.Height = 32
-
-					render.DrawRect(icon.Rect, icon.Color)
-				}
-			}
-		},
+	gomesevents.Subscribe(gomesevents.Game, events.PLAYER_BREAK_SPELL_EVENT, func(data any) {
+		println(config.Magenta + "Enemy knows the player is not concentrating anymore. All effects should stop now" + config.Reset)
+		e.reset_effects()
 	})
 }
 
-func LoadEnemy(specs data.EnemySpecs) {
-	message := fmt.Sprintf("Changing enemy specs. Loading %v", specs.Name)
-	println(message)
+func (e *Enemy) update() {
+	e.hp_rect.Width = (e.hp_max_width * e.health.GetCurrent()) / e.specs.HP
+}
 
-	if enemy_sprite != nil && enemy_specs.Name != specs.Name {
-		enemy_sprite.UpdateImage(specs.Image_Path, render.Transparent)
-		enemy_sprite.Disable()
+func (e *Enemy) render() {
+	render.DrawRect(e.hp_rect, render.Red)
+	e.sprite.UpdateRect(e.anim_position)
+
+	if e.is_burn || e.is_cold || e.is_paralized {
+		for i, icon := range e.effect_icons {
+			icon.Rect.PosX = e.hp_rect.PosX + (i * (32 + 8))
+			icon.Rect.PosY = e.hp_rect.PosY + e.hp_rect.Height + 8
+			icon.Rect.Width = 32
+			icon.Rect.Height = 32
+
+			render.DrawRect(icon.Rect, icon.Color)
+		}
+	}
+}
+
+func (e *Enemy) destroy() {
+	e.damage_ui_text.Clear()
+	e.sprite.Clear()
+	e.health = nil
+}
+
+func (e *Enemy) Enable() {
+	if e.sprite != nil {
+		e.sprite.Enable()
 	}
 
-	enemy_specs = specs
+	lifecycle.Enable(e.instance)
 }
 
-func enemy_init() {
-	message := fmt.Sprintf("Initializing %v", enemy_specs.Name)
-	println(message)
+func (e *Enemy) Disable() {
+	if e.damage_ui_text != nil {
+		e.damage_ui_text.Disable()
+	}
 
-	enemy_is_alive = true
+	if e.sprite != nil {
+		e.sprite.Disable()
+	}
+
+	lifecycle.Disable(e.instance)
+}
+
+func (e *Enemy) LoadData(specs data.EnemySpecs) {
+	message := fmt.Sprintf("Loading enemy %v", specs.Name)
+	println(config.Red + message + config.Reset)
 
 	rect := utils.RectSpecs{
-		PosX:   (config.SCREEN_SIZE.X / 2) - (enemy_specs.Size / 2),
+		PosX:   (config.SCREEN_SIZE.X / 2) - (specs.Size / 2),
 		PosY:   32,
-		Width:  enemy_specs.Size,
-		Height: enemy_specs.Size,
+		Width:  specs.Size,
+		Height: specs.Size,
 	}
-	enemy_anim_position = rect
+	e.anim_position = rect
 
-	enemy_hp_max_width = rect.Width
-	enemy_hp_rect = rect
-	enemy_hp_rect.PosY -= 24
-	enemy_hp_rect.Height = 16
+	e.hp_max_width = rect.Width
+	e.hp_rect = rect
+	e.hp_rect.PosY -= 24
+	e.hp_rect.Height = 16
 
-	enemy_effect_icons = make([]spells.EffectIcon, 0)
-
-	enemy_is_burn = false
-	enemy_is_cold = false
-	enemy_is_paralized = false
-	enemy_stack_count = 0
-	enemy_burn_damage = 0
-
-	enemy_damage_ui_text = render.NewFont(config.FONT_SPECS, config.SCREEN_SIZE)
-	enemy_damage_ui_text.Init("0", render.White, gomesmath.Vector2{X: 0, Y: 0})
-	enemy_damage_ui_text.AlignText(render.TopCenter, gomesmath.Vector2{X: 0, Y: 32})
-	enemy_damage_ui_text.Disable()
-
-	if enemy_sprite == nil {
-		enemy_sprite = render.NewSprite(
-			enemy_specs.Name,
-			enemy_specs.Image_Path,
+	if e.sprite == nil {
+		e.sprite = render.NewSprite(
+			specs.Name,
+			specs.Image_Path,
 			rect,
 			render.White,
 		)
+		e.sprite.Init()
 	} else {
-		enemy_sprite.Enable()
+		if e.specs.Name != specs.Name {
+			e.sprite.UpdateImage(specs.Image_Path, render.Transparent)
+			e.sprite.Disable()
+		}
 	}
 
-	if enemy_health == nil {
-		enemy_health = health.Init(enemy_specs.HP)
+	if e.health == nil {
+		e.health = health.Init(specs.HP)
 	} else {
-		enemy_health.ChangeMax(enemy_specs.HP)
-		enemy_health.Reset()
+		e.health.ChangeMax(specs.HP)
+		e.health.Reset()
 	}
 
-	go enemy_attack_task(enemy_specs.Attack_Interval)
+	e.specs = specs
+	e.is_alive = true
+
+	go e.attack_task(e.specs.Attack_Interval)
 }
 
-func enemy_stop() {
+func (e *Enemy) stop() {
 	go func() {
-		enemy_attack_done <- true
+		e.attack_done <- true
 
 		println(config.Cyan + "enemy stop is calling the reset of status effects" + config.Reset)
-		enemy_reset_effects()
+		e.reset_effects()
 	}()
 
-	enemy_is_alive = false
-	enemy_sprite.Disable()
-	lifecycle.Disable(enemy_go)
+	e.is_alive = false
+	e.sprite.Disable()
+	lifecycle.Disable(e.instance)
 
 	go func() {
-		message := config.Yellow + "Enemy " + enemy_specs.Name + " is dead" + config.Reset
+		message := config.Yellow + "Enemy " + e.specs.Name + " is dead" + config.Reset
 		events.Bus.Publish(events.EnemyDeadEvent{
 			Message: message,
 		})
 	}()
 }
 
-func enemy_respawn() {
-	events.Bus.Subscribe(events.GAME_RESTART_EVENT, func(e eventbus.Event) {
-		if enemy_is_alive {
-			println("Enemy is already alive. Skipping respawn")
-			return
-		}
-
-		if enemy_go != nil {
-			go func() {
-				enemy_attack_done = make(chan bool)
-			}()
-
-			enemy_init()
-			lifecycle.Enable(enemy_go)
-		}
-	})
-}
-
-func enemy_take_damage(player_damage int, effect spells.Effect) {
-	if !enemy_is_alive {
+func (e *Enemy) take_damage(player_damage int, effect spells.Effect) {
+	if !e.is_alive {
 		return
 	}
 
-	var defense float64 = float64(enemy_specs.Defense)
-	if enemy_is_cold && enemy_stack_count > 0 {
-		defense = defense / float64(enemy_stack_count+1)
-		println(config.Blue+"Enemy is cold so it has a debuff on it's defense. Current debuf is:"+config.Reset, enemy_stack_count)
+	var defense float64 = float64(e.specs.Defense)
+	if e.is_cold && e.stack_count > 0 {
+		defense = defense / float64(e.stack_count+1)
+		println(config.Blue+"Enemy is cold so it has a debuff on it's defense. Current debuf is:"+config.Reset, e.stack_count)
 	}
 	if defense < 1 {
 		defense = 1
@@ -214,138 +237,138 @@ func enemy_take_damage(player_damage int, effect spells.Effect) {
 
 	print(fmt.Sprintf("%sPlayer is attacking with %d damage %s\n", config.Green, damage, config.Reset))
 
-	enemy_health.TakeDamage(int(damage))
-	enemy_scale(-1)
+	e.health.TakeDamage(int(damage))
+	e.scale(-1)
 
-	enemy_show_damage_text(damage, render.White)
+	e.show_damage_text(damage, render.White)
 	time.AfterFunc(time.Millisecond*400, func() {
-		enemy_scale(1)
+		e.scale(1)
 	})
 
-	if enemy_health.GetCurrent() <= 0 {
-		enemy_stop()
+	if e.health.GetCurrent() <= 0 {
+		e.stop()
 		return
 	}
 
 	if effect.Stack > 0 {
-		enemy_stack_count += effect.Stack
+		e.stack_count += effect.Stack
 
 		switch effect.Type {
 		case spells.Burn:
-			enemy_apply_burn(damage)
+			e.apply_burn(damage)
 		case spells.Cold:
-			enemy_apply_cold()
+			e.apply_cold()
 		case spells.Paralysis:
-			enemy_apply_paralysis()
+			e.apply_paralysis()
 		}
 	}
 }
 
-func enemy_reset_effects() {
-	if enemy_is_burn {
-		enemy_is_burn = false
-		enemy_burn_damage = 0
-		enemy_burn_done <- true
+func (e *Enemy) reset_effects() {
+	if e.is_burn {
+		e.is_burn = false
+		e.burn_damage = 0
+		e.burn_done <- true
 	}
 
-	if enemy_is_cold {
-		enemy_is_cold = false
+	if e.is_cold {
+		e.is_cold = false
 	}
 
-	if enemy_is_paralized {
-		enemy_is_paralized = false
+	if e.is_paralized {
+		e.is_paralized = false
 	}
 
-	enemy_stack_count = 0
-	enemy_effect_icons = make([]spells.EffectIcon, 0)
+	e.stack_count = 0
+	e.effect_icons = make([]spells.EffectIcon, 0)
 }
 
-func enemy_apply_burn(base_damage int) {
+func (e *Enemy) apply_burn(base_damage int) {
 	var raw float64 = float64(base_damage) * 0.1
 	if raw < 1 {
 		raw = 1
 	}
 
-	enemy_burn_damage = int(raw) * enemy_stack_count
-	print(fmt.Sprintf(config.Red+"Current Burning stack: %v\n"+config.Reset, enemy_stack_count))
+	e.burn_damage = int(raw) * e.stack_count
+	print(fmt.Sprintf(config.Red+"Current Burning stack: %v\n"+config.Reset, e.stack_count))
 
-	enemy_effect_icons = make([]spells.EffectIcon, 0)
-	for range enemy_stack_count {
-		enemy_effect_icons = append(enemy_effect_icons, spells.EffectIcon{
+	e.effect_icons = make([]spells.EffectIcon, 0)
+	for range e.stack_count {
+		e.effect_icons = append(e.effect_icons, spells.EffectIcon{
 			Color: render.Orange,
 		})
 	}
 
-	if !enemy_is_burn {
-		enemy_is_burn = true
+	if !e.is_burn {
+		e.is_burn = true
 
-		go enemy_burn_task()
+		go e.burn_task()
 	}
 }
 
-func enemy_apply_cold() {
-	if !enemy_is_cold {
-		enemy_is_cold = true
+func (e *Enemy) apply_cold() {
+	if !e.is_cold {
+		e.is_cold = true
 	}
 
-	enemy_effect_icons = make([]spells.EffectIcon, 0)
-	for range enemy_stack_count {
-		enemy_effect_icons = append(enemy_effect_icons, spells.EffectIcon{
+	e.effect_icons = make([]spells.EffectIcon, 0)
+	for range e.stack_count {
+		e.effect_icons = append(e.effect_icons, spells.EffectIcon{
 			Color: render.Blue,
 		})
 	}
 }
 
-func enemy_apply_paralysis() {
-	if !enemy_is_paralized {
-		enemy_is_paralized = true
+func (e *Enemy) apply_paralysis() {
+	if !e.is_paralized {
+		e.is_paralized = true
 	}
 
-	enemy_effect_icons = make([]spells.EffectIcon, 0)
-	for range enemy_stack_count {
-		enemy_effect_icons = append(enemy_effect_icons, spells.EffectIcon{
+	e.effect_icons = make([]spells.EffectIcon, 0)
+	for range e.stack_count {
+		e.effect_icons = append(e.effect_icons, spells.EffectIcon{
 			Color: render.Purple,
 		})
 	}
 }
 
-func enemy_attack_task(interval int) {
+func (e *Enemy) attack_task(interval int) {
 	println("Starting enemy attack task...")
 	ticker := time.NewTicker(time.Millisecond * time.Duration(interval))
 
 	for {
 		select {
-		case <-enemy_attack_done:
+		case <-e.attack_done:
 			println("Stopping enemy attack")
 			ticker.Stop()
 			return
 		case <-ticker.C:
 			skip := false
-			if enemy_is_paralized {
+			if e.is_paralized {
 				skip = true
-				enemy_stack_count -= 1
-				enemy_effect_icons = enemy_effect_icons[:len(enemy_effect_icons)-1]
+				e.stack_count -= 1
+				e.effect_icons = e.effect_icons[:len(e.effect_icons)-1]
 
-				if enemy_stack_count <= 0 {
+				if e.stack_count <= 0 {
 					gomesevents.Emit(gomesevents.Game, events.EnemyBreakParalysisEvent{})
-					enemy_reset_effects()
+					e.reset_effects()
 				}
 			}
 
 			if skip {
 				println(config.Yellow + "Enemy is paralyzed. Skipping attack" + config.Reset)
-				enemy_shake()
+				e.shake()
 			} else {
-				damage := math.CalcDamange(enemy_specs.Attack_Damage, enemy_specs.Attack_Damage/2)
+				damage := math.CalcDamange(e.specs.Attack_Damage, e.specs.Attack_Damage/2)
 
-				if enemy_is_cold && enemy_stack_count > 0 {
-					damage = damage / (enemy_stack_count + 1)
-					println(config.Blue+"Enemy is cold and have a attack debuff. Current debuff:"+config.Reset, enemy_stack_count)
+				if e.is_cold && e.stack_count > 0 {
+					damage = damage / (e.stack_count + 1)
+					println(config.Blue+"Enemy is cold and have a attack debuff. Current debuff:"+config.Reset, e.stack_count)
 				}
 
-				enemy_scale(1)
+				e.scale(1)
 				time.AfterFunc(time.Millisecond*400, func() {
-					enemy_scale(-1)
+					e.scale(-1)
 				})
 
 				time.AfterFunc(time.Millisecond*200, func() {
@@ -358,64 +381,64 @@ func enemy_attack_task(interval int) {
 	}
 }
 
-func enemy_burn_task() {
+func (e *Enemy) burn_task() {
 	ticker := time.NewTicker(time.Millisecond * 1000)
 
 	for {
 		select {
-		case <-enemy_burn_done:
+		case <-e.burn_done:
 			println("Enemy is no longer burning")
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			print(fmt.Sprintf("Enemy is burning at %v damage\n", enemy_burn_damage))
-			enemy_health.TakeDamage(enemy_burn_damage)
-			enemy_show_damage_text(enemy_burn_damage, render.Orange)
+			print(fmt.Sprintf("Enemy is burning at %v damage\n", e.burn_damage))
+			e.health.TakeDamage(e.burn_damage)
+			e.show_damage_text(e.burn_damage, render.Orange)
 
-			if enemy_health.GetCurrent() <= 0 {
-				enemy_stop()
+			if e.health.GetCurrent() <= 0 {
+				e.stop()
 			}
 		}
 	}
 }
 
-func enemy_scale(direction int) {
-	if !enemy_is_alive {
+func (e *Enemy) scale(direction int) {
+	if !e.is_alive {
 		return
 	}
 
-	enemy_anim_position.PosX -= 64 * direction
-	enemy_anim_position.PosY -= 64 * direction
-	enemy_anim_position.Width += 128 * direction
-	enemy_anim_position.Height += 128 * direction
+	e.anim_position.PosX -= 64 * direction
+	e.anim_position.PosY -= 64 * direction
+	e.anim_position.Width += 128 * direction
+	e.anim_position.Height += 128 * direction
 }
 
-func enemy_shake() {
-	if !enemy_is_alive {
+func (e *Enemy) shake() {
+	if !e.is_alive {
 		return
 	}
 
-	og_pos := enemy_anim_position.PosX
-	enemy_anim_position.PosX += 64
+	og_pos := e.anim_position.PosX
+	e.anim_position.PosX += 64
 	time.AfterFunc(time.Millisecond*100, func() {
-		enemy_anim_position.PosX = og_pos - 64
+		e.anim_position.PosX = og_pos - 64
 	})
 	time.AfterFunc(time.Millisecond*150, func() {
-		enemy_anim_position.PosX = og_pos + 64
+		e.anim_position.PosX = og_pos + 64
 	})
 	time.AfterFunc(time.Millisecond*200, func() {
-		enemy_anim_position.PosX = og_pos - 64
+		e.anim_position.PosX = og_pos - 64
 	})
 	time.AfterFunc(time.Millisecond*250, func() {
-		enemy_anim_position.PosX = og_pos
+		e.anim_position.PosX = og_pos
 	})
 }
 
-func enemy_show_damage_text(damage int, color render.Color) {
-	enemy_damage_ui_text.UpdateText(fmt.Sprint(damage))
-	enemy_damage_ui_text.UpdateColor(color)
-	enemy_damage_ui_text.Enable()
+func (e *Enemy) show_damage_text(damage int, color render.Color) {
+	e.damage_ui_text.UpdateText(fmt.Sprint(damage))
+	e.damage_ui_text.UpdateColor(color)
+	e.damage_ui_text.Enable()
 	time.AfterFunc(time.Millisecond*1200, func() {
-		enemy_damage_ui_text.Disable()
+		e.damage_ui_text.Disable()
 	})
 }

@@ -59,6 +59,7 @@ func change_scene(to_close string) {
 		gamemap.Hide()
 
 		combat.LoadPlayerData(player_skills, player_weapon)
+		combat.LoadEnemy()
 		combat.Show()
 
 	case config.SCENE_COMBAT:
