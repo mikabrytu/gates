@@ -157,6 +157,7 @@ func move_player(coord gomesmath.Vector2) {
 	show_adjacent()
 
 	if tile.HasEnemy {
+		tile.HasEnemy = false
 		gomesevents.Emit(gomesevents.Game, events.SceneChangeEvent{
 			Scene: config.SCENE_MAP,
 		})
