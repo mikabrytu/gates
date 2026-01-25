@@ -20,6 +20,7 @@ const (
 var player *actors.Player
 var enemy *actors.Enemy
 var enemy_pool []data_enemies.EnemySpecs
+var is_first_time bool = true
 
 func Init() {
 	player = actors.NewPlayer()
@@ -52,7 +53,10 @@ func Hide() {
 }
 
 func LoadPlayerData(skills skill.Skill, weapon data_weapons.Weapon) {
-	player.LoadData(weapon, skills)
+	if is_first_time {
+		is_first_time = false
+		player.LoadData(weapon, skills)
+	}
 }
 
 func LoadEnemy() {
