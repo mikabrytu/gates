@@ -1,11 +1,10 @@
-package scenes
+package combat
 
 import (
 	"fmt"
 	"gates/config"
 	"gates/internal/actors"
 	data_enemies "gates/internal/data/enemies"
-	data_weapons "gates/internal/data/weapons"
 	"gates/internal/events"
 
 	"github.com/Papiermond/eventbus"
@@ -25,65 +24,30 @@ const (
 )
 
 var game_state GameState
-var weapons_fonts [6]*render.Font
+
 var skills_fonts [4]*render.Font
 var continue_font *render.Font
 var rounds int
 
+func Init() {
+
+}
+
+func Show() {
+
+}
+
+func Hide() {
+
+}
+
 func RunCombat() {
 	listeners()
-	show_weapon_text()
 	game_state = Preparing
 }
 
 func listeners() {
 	// Engine events
-	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_1, func(data any) {
-		switch game_state {
-		case Preparing:
-			actors.PlayerLoadWeapon(data_weapons.Sword)
-			sequence()
-		case Waiting:
-			hide_ui_text()
-			show_continue_message()
-		}
-	})
-
-	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_2, func(data any) {
-		switch game_state {
-		case Preparing:
-			actors.PlayerLoadWeapon(data_weapons.Bow)
-			sequence()
-		case Waiting:
-			hide_ui_text()
-			show_continue_message()
-		}
-	})
-
-	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_3, func(data any) {
-		switch game_state {
-		case Preparing:
-			actors.PlayerLoadWeapon(data_weapons.FireSpell)
-			sequence()
-		case Waiting:
-			hide_ui_text()
-			show_continue_message()
-		}
-	})
-
-	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_4, func(data any) {
-		if game_state == Preparing {
-			actors.PlayerLoadWeapon(data_weapons.IceSpell)
-			sequence()
-		}
-	})
-
-	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_5, func(data any) {
-		if game_state == Preparing {
-			actors.PlayerLoadWeapon(data_weapons.ShockSpell)
-			sequence()
-		}
-	})
 
 	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_SPACE, func(data any) {
 		sequence()
@@ -182,26 +146,6 @@ func sequence() {
 	}
 }
 
-func show_weapon_text() {
-	messages := []string{
-		"Choose your weapon",
-		"1 - Sword",
-		"2 - Bow",
-		"3 - Fire Spell",
-		"4 - Ice Spell",
-		"5 - Shock Spell",
-	}
-
-	for i, m := range messages {
-		if weapons_fonts[i] == nil {
-			weapons_fonts[i] = render.NewFont(config.FONT_SPECS, config.SCREEN_SIZE)
-		}
-
-		weapons_fonts[i].Init(m, render.White, math.Vector2{X: 0, Y: 0})
-		weapons_fonts[i].AlignText(render.TopLeft, math.Vector2{X: 16, Y: 16 + (i * 32)})
-	}
-}
-
 func show_level_up_text() {
 	messages := []string{"LEVEL UP. Choose a skill to increase", "1 - STR", "2 - INT", "3 - SPD"}
 
@@ -220,14 +164,6 @@ func show_level_up_text() {
 }
 
 func hide_ui_text() {
-	for _, f := range weapons_fonts {
-		if f == nil {
-			continue
-		}
-
-		f.Disable()
-	}
-
 	for _, f := range skills_fonts {
 		if f == nil {
 			continue
