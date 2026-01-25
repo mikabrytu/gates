@@ -20,199 +20,238 @@ import (
 	"github.com/mikabrytu/gomes-engine/utils"
 )
 
-var player_sprite *render.Sprite
-var player_health *health.Health
-var player_skills *skill.Skill
-var player_damage_ui_text *render.Font
-var player_current_weapon data.Weapon
-var player_weapon_rect utils.RectSpecs
-var player_hp_rect utils.RectSpecs
-var player_recovery_rect utils.RectSpecs
-var player_anim_position utils.RectSpecs
-var player_defense_rect utils.RectSpecs
-var player_attack_start_time time.Time
-var player_defense_start_time time.Time
-var player_max_hp int
-var player_max_hp_width int
-var player_concentration_count = 0
-var player_can_attack = true
-var player_can_level_up = false
-var player_is_attacking = false
-var player_is_animating = false
-var player_is_defending = false
-var player_is_stunned = false
-var player_is_concentrating = false
+type Player struct {
+	instance            *lifecycle.GameObject
+	sprite              *render.Sprite
+	health              *health.Health
+	skills              *skill.Skill
+	damage_ui_text      *render.Font
+	current_weapon      data.Weapon
+	weapon_rect         utils.RectSpecs
+	hp_rect             utils.RectSpecs
+	recovery_rect       utils.RectSpecs
+	anim_position       utils.RectSpecs
+	defense_rect        utils.RectSpecs
+	attack_start_time   time.Time
+	defense_start_time  time.Time
+	max_hp              int
+	max_hp_width        int
+	og_recovery_width   int
+	concentration_count int
+	can_attack          bool
+	can_level_up        bool
+	is_attacking        bool
+	is_animating        bool
+	is_defending        bool
+	is_stunned          bool
+	is_concentrating    bool
+}
 
 const PLAYER_HP_PER_LEVEL int = 5
 const PLAYER_STUN_DELAY int = 6000
 const PLAYER_SPELL_EFFECT_CHANCE = 50
 
-func Player() {
-	player_init()
-
-	og_recovery_width := player_recovery_rect.Width
-
-	lifecycle.Register(&lifecycle.GameObject{
-		Start: func() {
-			player_sprite.Init()
-
-			// Input
-			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_MOUSE_CLICK_DOWN, func(data any) {
-				click := data.(gomesevents.InputMouseClickDownEvent)
-
-				if player_is_animating || player_is_defending || player_is_stunned {
-					println("Player cannot act now")
-					return
-				}
-
-				if click.Index.Left == 1 {
-					player_attack_listener()
-				}
-
-				if click.Index.Right == 1 {
-					player_defend(true)
-				}
-			})
-
-			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_MOUSE_CLICK_UP, func(data any) {
-				player_defend(false)
-			})
-
-			// Level Up
-			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_1, func(data any) {
-				player_level_up_listener(1)
-			})
-
-			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_2, func(data any) {
-				player_level_up_listener(2)
-			})
-
-			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_3, func(data any) {
-				player_level_up_listener(3)
-			})
-
-			// Take Damage
-			events.Bus.Subscribe(events.ENEMY_ATTACK_EVENT, func(e eventbus.Event) {
-				damage := e.(events.EnemyAttackEvent).Damage
-				player_take_damage_listener(int(damage))
-			})
-
-			events.Bus.Subscribe(events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
-				player_lost_concentration(false)
-			})
-
-			// Enemy
-			gomesevents.Subscribe(gomesevents.Game, events.ENEMY_BREAK_PARALYSIS_EVENT, func(data any) {
-				println("Enemy is trying to break free from Paralysis")
-				player_lost_concentration(false)
-			})
-		},
-		Update: func() {
-			player_hp_rect.Width = (player_max_hp_width * player_health.GetCurrent()) / player_health.GetMax()
-
-			if player_is_attacking {
-				elapsed := time.Since(player_attack_start_time).Milliseconds()
-				t := float64(elapsed) / float64(player_get_recovery())
-
-				width := math.Lerp(float64(og_recovery_width), 0, t)
-				player_recovery_rect.Width = int(width)
-
-				if t > 1 {
-					t = 1
-					player_is_attacking = false
-					player_recovery_rect.Width = og_recovery_width
-				}
-			}
-		},
-		Render: func() {
-			player_sprite.UpdateRect(player_anim_position)
-
-			if player_is_defending {
-				render.DrawRect(player_defense_rect, render.White)
-			}
-
-			if player_is_stunned {
-				render.DrawRect(player_hp_rect, render.Yellow)
-				render.DrawRect(player_recovery_rect, render.Yellow)
-				return
-			}
-
-			render.DrawRect(player_hp_rect, render.Green)
-			render.DrawRect(player_recovery_rect, render.Blue)
-		},
-	})
-}
-
-func PlayerLevelUp() {
-	player_can_level_up = true
-}
-
-func PlayerLoadWeapon(weapon data.Weapon) {
-	player_current_weapon = weapon
-	println(fmt.Sprintf("Player weapon loaded: %s", weapon.Name))
-}
-
-func player_init() {
-	player_max_hp_width = 512
-
-	player_weapon_rect = utils.RectSpecs{
-		PosX:   config.SCREEN_SIZE.X - player_current_weapon.SpriteSize.X + player_current_weapon.SpriteOffset.X,
-		PosY:   config.SCREEN_SIZE.Y - player_current_weapon.SpriteSize.Y + player_current_weapon.SpriteOffset.Y,
-		Width:  player_current_weapon.SpriteSize.X,
-		Height: player_current_weapon.SpriteSize.Y,
+func NewPlayer() *Player {
+	player := &Player{
+		concentration_count: 0,
+		can_attack:          true,
+		can_level_up:        false,
+		is_attacking:        false,
+		is_animating:        false,
+		is_defending:        false,
+		is_stunned:          false,
+		is_concentrating:    false,
 	}
-	player_anim_position = player_weapon_rect
 
-	player_hp_rect = utils.RectSpecs{
-		PosX:   (config.SCREEN_SIZE.X / 2) - (player_max_hp_width / 2),
+	player.max_hp_width = 512
+
+	player.hp_rect = utils.RectSpecs{
+		PosX:   (config.SCREEN_SIZE.X / 2) - (player.max_hp_width / 2),
 		PosY:   config.SCREEN_SIZE.Y - 40,
-		Width:  player_max_hp_width,
+		Width:  player.max_hp_width,
 		Height: 24,
 	}
 
-	player_defense_rect = utils.RectSpecs{
+	player.defense_rect = utils.RectSpecs{
 		PosX:   (config.SCREEN_SIZE.X / 2) - 256,
 		PosY:   config.SCREEN_SIZE.Y - (config.SCREEN_SIZE.Y / 3),
 		Width:  512,
 		Height: 512,
 	}
 
-	player_recovery_rect = player_hp_rect
-	player_recovery_rect.PosY -= 24
-	player_recovery_rect.Height = 12
+	player.recovery_rect = player.hp_rect
+	player.recovery_rect.PosY -= 24
+	player.recovery_rect.Height = 12
 
-	player_sprite = render.NewSprite(
-		"Player Weapon",
-		player_current_weapon.SpritePath,
-		player_weapon_rect,
-		render.Transparent,
-	)
+	if player.damage_ui_text == nil {
+		player.damage_ui_text = render.NewFont(config.FONT_SPECS, config.SCREEN_SIZE)
+		player.damage_ui_text.Init("0", render.White, gomesmath.Vector2{X: 0, Y: 0})
+		player.damage_ui_text.AlignText(render.BottomCenter, gomesmath.Vector2{X: 0, Y: 96})
+		player.damage_ui_text.Disable()
+	}
 
-	//player_max_hp = 1000
-	player_skills = skill.NewSkill()
-	player_max_hp = PLAYER_HP_PER_LEVEL * player_skills.GetTotalSkillPoints()
-	player_health = health.Init(player_max_hp)
+	player.og_recovery_width = player.recovery_rect.Width
 
-	print(fmt.Sprintf("Player initialized with %d health\n", player_health.GetCurrent()))
+	player.instance = lifecycle.Register(&lifecycle.GameObject{
+		Start:   player.start,
+		Update:  player.update,
+		Render:  player.render,
+		Destroy: player.destroy,
+	})
 
-	if player_damage_ui_text == nil {
-		player_damage_ui_text = render.NewFont(config.FONT_SPECS, config.SCREEN_SIZE)
-		player_damage_ui_text.Init("0", render.White, gomesmath.Vector2{X: 0, Y: 0})
-		player_damage_ui_text.AlignText(render.BottomCenter, gomesmath.Vector2{X: 0, Y: 96})
-		player_damage_ui_text.Disable()
+	return player
+}
+
+func (p *Player) start() {
+	// Input
+	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_MOUSE_CLICK_DOWN, func(data any) {
+		click := data.(gomesevents.InputMouseClickDownEvent)
+
+		if p.is_animating || p.is_defending || p.is_stunned {
+			println("Player cannot act now")
+			return
+		}
+
+		if click.Index.Left == 1 {
+			p.attack_listener()
+		}
+
+		if click.Index.Right == 1 {
+			p.defend(true)
+		}
+	})
+
+	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_MOUSE_CLICK_UP, func(data any) {
+		p.defend(false)
+	})
+
+	// Take Damage
+	events.Bus.Subscribe(events.ENEMY_ATTACK_EVENT, func(e eventbus.Event) {
+		damage := e.(events.EnemyAttackEvent).Damage
+		p.take_damage_listener(int(damage))
+	})
+
+	events.Bus.Subscribe(events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
+		p.lost_concentration(false)
+	})
+
+	// Enemy
+	gomesevents.Subscribe(gomesevents.Game, events.ENEMY_BREAK_PARALYSIS_EVENT, func(data any) {
+		println("Enemy is trying to break free from Paralysis")
+		p.lost_concentration(false)
+	})
+}
+
+func (p *Player) update() {
+	p.hp_rect.Width = (p.max_hp_width * p.health.GetCurrent()) / p.health.GetMax()
+
+	if p.is_attacking {
+		elapsed := time.Since(p.attack_start_time).Milliseconds()
+		t := float64(elapsed) / float64(p.get_recovery())
+
+		width := math.Lerp(float64(p.og_recovery_width), 0, t)
+		p.recovery_rect.Width = int(width)
+
+		if t > 1 {
+			t = 1
+			p.is_attacking = false
+			p.recovery_rect.Width = p.og_recovery_width
+		}
 	}
 }
 
-func player_damage() int {
-	return player_current_weapon.Damage * player_skills.STR
+func (p *Player) render() {
+	p.sprite.UpdateRect(p.anim_position)
+
+	if p.is_defending {
+		render.DrawRect(p.defense_rect, render.White)
+	}
+
+	if p.is_stunned {
+		render.DrawRect(p.hp_rect, render.Yellow)
+		render.DrawRect(p.recovery_rect, render.Yellow)
+		return
+	}
+
+	render.DrawRect(p.hp_rect, render.Green)
+	render.DrawRect(p.recovery_rect, render.Blue)
 }
 
-func player_spell_effect() spell.Effect {
-	if player_current_weapon.Type == data.Physical {
+func (p *Player) destroy() {
+	p.damage_ui_text.Clear()
+	p.sprite.Clear()
+	p.health = nil
+	p.skills = nil
+	p = nil
+}
+
+func (p *Player) Enable() {
+	if p.sprite != nil {
+		p.sprite.Enable()
+	}
+
+	lifecycle.Enable(p.instance)
+}
+
+func (p *Player) Disable() {
+	if p.damage_ui_text != nil {
+		p.damage_ui_text.Disable()
+	}
+
+	if p.sprite != nil {
+		p.sprite.Disable()
+	}
+
+	lifecycle.Disable(p.instance)
+}
+
+func (p *Player) LoadData(weapon data.Weapon, skills skill.Skill) {
+	p.current_weapon = weapon
+	p.weapon_rect = utils.RectSpecs{
+		PosX:   config.SCREEN_SIZE.X - p.current_weapon.SpriteSize.X + p.current_weapon.SpriteOffset.X,
+		PosY:   config.SCREEN_SIZE.Y - p.current_weapon.SpriteSize.Y + p.current_weapon.SpriteOffset.Y,
+		Width:  p.current_weapon.SpriteSize.X,
+		Height: p.current_weapon.SpriteSize.Y,
+	}
+	p.anim_position = p.weapon_rect
+
+	p.sprite = render.NewSprite(
+		"Player Weapon",
+		p.current_weapon.SpritePath,
+		p.weapon_rect,
+		render.Transparent,
+	)
+	p.sprite.Init()
+	p.sprite.Disable()
+
+	p.skills = skill.NewSkill()
+	p.skills.IncreaseSTR(skills.STR)
+	p.skills.IncreaseINT(skills.INT)
+	p.skills.IncreaseSPD(skills.SPD)
+	p.max_hp = PLAYER_HP_PER_LEVEL * p.skills.GetTotalSkillPoints()
+	p.health = health.Init(p.max_hp)
+
+	message := fmt.Sprintf(
+		"Player data loaded. Level %v: { STR: %v, INT: %v SPD: %v } | Weapon: %v\n",
+		p.skills.GetLevel(),
+		p.skills.STR,
+		p.skills.INT,
+		p.skills.SPD,
+		p.current_weapon.Name,
+	)
+	print(config.Green + message + config.Reset)
+}
+
+func (p *Player) calc_damage() int {
+	return p.current_weapon.Damage * p.skills.STR
+}
+
+func (p *Player) spell_effect() spell.Effect {
+	if p.current_weapon.Type == data.Physical {
 		return spell.Effect{}
 	}
 
-	if player_concentration_count >= player_skills.INT {
+	if p.concentration_count >= p.skills.INT {
 		println("Player cannot active more spells until concentration break")
 		return spell.Effect{}
 	}
@@ -220,12 +259,12 @@ func player_spell_effect() spell.Effect {
 	roll := rand.IntN(100)
 
 	if roll <= PLAYER_SPELL_EFFECT_CHANCE {
-		player_is_concentrating = true
-		player_concentration_count += 1
+		p.is_concentrating = true
+		p.concentration_count += 1
 
 		var effect_type spell.EffectType
 		name := ""
-		switch player_current_weapon.Type {
+		switch p.current_weapon.Type {
 		case data.Fire:
 			effect_type = spell.Burn
 			name = "Burn"
@@ -237,7 +276,7 @@ func player_spell_effect() spell.Effect {
 			name = "Paralysis"
 		}
 
-		print(fmt.Sprintf(config.Yellow+"Player triggered spell effect: %v. Max Stack: %v\n"+config.Reset, name, player_skills.INT))
+		print(fmt.Sprintf(config.Yellow+"Player triggered spell effect: %v. Max Stack: %v\n"+config.Reset, name, p.skills.INT))
 
 		return spell.Effect{
 			Type:  effect_type,
@@ -248,57 +287,57 @@ func player_spell_effect() spell.Effect {
 	return spell.Effect{}
 }
 
-func player_attack_listener() {
-	if !player_can_attack {
+func (p *Player) attack_listener() {
+	if !p.can_attack {
 		return
 	}
 
-	player_can_attack = false
-	player_is_attacking = true
-	player_is_animating = true
-	player_attack_start_time = time.Now()
+	p.can_attack = false
+	p.is_attacking = true
+	p.is_animating = true
+	p.attack_start_time = time.Now()
 
 	events.Bus.Publish(events.PlayerAttackEvent{
-		Damage: player_damage(),
-		Effect: player_spell_effect(),
+		Damage: p.calc_damage(),
+		Effect: p.spell_effect(),
 	})
 
-	temp_rect := player_weapon_rect
-	temp_rect.PosX = (config.SCREEN_SIZE.X / 2) - (player_current_weapon.SpriteSize.X / 2)
-	player_anim_position = temp_rect
+	temp_rect := p.weapon_rect
+	temp_rect.PosX = (config.SCREEN_SIZE.X / 2) - (p.current_weapon.SpriteSize.X / 2)
+	p.anim_position = temp_rect
 
 	// Recovery delay
-	time.AfterFunc(time.Millisecond*time.Duration(player_get_recovery()), func() {
-		player_can_attack = true
+	time.AfterFunc(time.Millisecond*time.Duration(p.get_recovery()), func() {
+		p.can_attack = true
 	})
 
 	// Weapon animation
 	time.AfterFunc(time.Millisecond*350, func() {
-		player_is_animating = false
-		player_anim_position = player_weapon_rect
+		p.is_animating = false
+		p.anim_position = p.weapon_rect
 	})
 }
 
-func player_take_damage_listener(base_damage int) {
-	damage := max(base_damage/player_skills.STR, 1)
+func (p *Player) take_damage_listener(base_damage int) {
+	damage := max(base_damage/p.skills.STR, 1)
 
-	if player_is_defending {
-		player_negate_damage(base_damage)
+	if p.is_defending {
+		p.negate_damage(base_damage)
 		return
 	}
 
 	message := config.Red + fmt.Sprintf("Enemy attacks with %d damage", damage) + config.Reset
 	println(message)
 
-	player_health.TakeDamage(damage)
+	p.health.TakeDamage(damage)
 
-	player_damage_ui_text.UpdateText(fmt.Sprint(damage))
-	player_damage_ui_text.Enable()
+	p.damage_ui_text.UpdateText(fmt.Sprint(damage))
+	p.damage_ui_text.Enable()
 	time.AfterFunc(time.Millisecond*1200, func() {
-		player_damage_ui_text.Disable()
+		p.damage_ui_text.Disable()
 	})
 
-	if player_health.GetCurrent() <= 0 {
+	if p.health.GetCurrent() <= 0 {
 		// events.Bus.Publish(events.GameOverEvent{
 		// 	Message: "Player is dead",
 		// })
@@ -307,22 +346,22 @@ func player_take_damage_listener(base_damage int) {
 	}
 }
 
-func player_defend(enable bool) {
+func (p *Player) defend(enable bool) {
 	if enable {
-		player_is_defending = true
-		player_sprite.Disable()
-		player_defense_start_time = time.Now()
+		p.is_defending = true
+		p.sprite.Disable()
+		p.defense_start_time = time.Now()
 	} else {
-		player_is_defending = false
-		player_sprite.Enable()
+		p.is_defending = false
+		p.sprite.Enable()
 	}
 }
 
-func player_negate_damage(damage int) {
-	hold_time := int(time.Since(player_defense_start_time).Milliseconds())
+func (p *Player) negate_damage(damage int) {
+	hold_time := int(time.Since(p.defense_start_time).Milliseconds())
 
 	break_roll := rand.IntN(100)
-	break_chance := (damage*100)/player_health.GetMax() + (max(hold_time, 1) / 100)
+	break_chance := (damage*100)/p.health.GetMax() + (max(hold_time, 1) / 100)
 
 	print(fmt.Sprintf(
 		config.Blue+"Player absorbed %v damange\nDefense held for %v.\nBreak roll: %v | Break chance: %v\n"+config.Reset,
@@ -334,23 +373,23 @@ func player_negate_damage(damage int) {
 
 	if break_roll <= break_chance {
 
-		if player_is_concentrating {
-			player_lost_concentration(true)
+		if p.is_concentrating {
+			p.lost_concentration(true)
 		}
 
-		if player_current_weapon.Type != data.Fire {
-			player_is_stunned = true
+		if p.current_weapon.Type != data.Fire {
+			p.is_stunned = true
 			print(fmt.Sprintf("%s", config.Yellow+"Player is Stunned\n"+config.Reset))
 
 			time.AfterFunc(time.Millisecond*time.Duration(PLAYER_STUN_DELAY), func() {
-				player_is_stunned = false
+				p.is_stunned = false
 			})
 		}
 	}
 }
 
-func player_level_up_listener(s int) {
-	if !player_can_level_up {
+func (p *Player) level_up_listener(s int) {
+	if !p.can_level_up {
 		return
 	}
 
@@ -365,53 +404,28 @@ func player_level_up_listener(s int) {
 		level_up.SPD = 1
 	}
 
-	player_skills.LevelUp(level_up)
-	player_can_level_up = false
-	player_health.ChangeMax(player_health.GetMax() + (player_max_hp / 2))
-	player_health.Reset()
+	p.skills.LevelUp(level_up)
+	p.can_level_up = false
+	p.health.ChangeMax(p.health.GetMax() + (p.max_hp / 2))
+	p.health.Reset()
 
 	println(fmt.Sprintf("Player Current Level: %d {STR: %d, INT: %d, SPD: %v} \n",
-		player_skills.GetLevel(),
-		player_skills.STR,
-		player_skills.INT,
-		player_skills.SPD))
+		p.skills.GetLevel(),
+		p.skills.STR,
+		p.skills.INT,
+		p.skills.SPD))
 }
 
-func player_get_recovery() int {
-	return player_current_weapon.Recovery / player_skills.SPD
+func (p *Player) get_recovery() int {
+	return p.current_weapon.Recovery / p.skills.SPD
 }
 
-func player_lost_concentration(fire_event bool) {
-	player_concentration_count = 0
-	player_is_concentrating = false
+func (p *Player) lost_concentration(fire_event bool) {
+	p.concentration_count = 0
+	p.is_concentrating = false
 
 	if fire_event {
 		println(config.Yellow + "Player is no longer concentrating and will publish a break event" + config.Reset)
 		gomesevents.Emit(gomesevents.Game, events.PlayerBreakSpellEvent{})
 	}
-}
-
-func old_math() {
-	// damage := 0
-	// base := player_skills.STR * player_current_weapon.Damage
-	// raw_damage := utils1.CalcDamange(base, base/2)
-
-	// //print(fmt.Sprintf("%sPlayer Raw Damage of %d %s\n", config.Green, raw_damage, config.Reset))
-
-	// crit_chance := player_skills.SPD * 10 // TODO: Set this multiplier somewhere else
-	// crit_index := rand.IntN(100)
-	// crit_hit := crit_index <= crit_chance
-
-	// //print(fmt.Sprintf("%sCritical Chance of %d. Dice rolled %d. Was a crit? %v %s\n", config.Green, crit_chance, crit_index, crit_hit, config.Reset))
-
-	// crit_damage := 0
-	// if crit_hit {
-	// 	crit_damage = (raw_damage * (player_skills.INT * 25)) / 100 // TODO: Set this multiplier somewhere else
-
-	// 	print(fmt.Sprintf("%sCRITICAL HIT! Player is dealing additional %d damage%s\n", config.Green, crit_damage, config.Reset))
-	// }
-
-	// damage = raw_damage + crit_damage
-	// print(fmt.Sprintf("%sPlayer is attacking with %d damage %s\n", config.Green, damage, config.Reset))
-	// return damage
 }
