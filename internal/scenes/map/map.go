@@ -3,9 +3,10 @@ package gamemap
 import (
 	"gates/config"
 	data "gates/internal/data/map_rules"
+	"gates/internal/events"
 	"gates/pkg/tilemap"
 
-	"github.com/mikabrytu/gomes-engine/events"
+	gomesevents "github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	gomesmath "github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
@@ -13,6 +14,8 @@ import (
 )
 
 var tmap *tilemap.TileMap
+var wall_instance *lifecycle.GameObject
+var player_instance *lifecycle.GameObject
 var player_rect utils.RectSpecs
 var player_coord gomesmath.Vector2
 
@@ -21,20 +24,20 @@ var MAP_SIZE = gomesmath.Vector2{X: 9, Y: 9}
 const SCALE int = 96
 
 func Init() {
-
+	drawMap()
+	init_player()
 }
 
 func Show() {
-
+	tmap.Enable()
+	lifecycle.Enable(wall_instance)
+	lifecycle.Enable(player_instance)
 }
 
 func Hide() {
-
-}
-
-func RunMap() {
-	drawMap()
-	init_player()
+	tmap.Disable()
+	lifecycle.Disable(wall_instance)
+	lifecycle.Disable(player_instance)
 }
 
 func drawMap() {
@@ -50,6 +53,7 @@ func drawMap() {
 
 	tmap = tilemap.NewTileMap(MAP_SIZE, rect, offset)
 	tmap.DrawMapAssetsFromFile(data.RULES, map_file)
+	tmap.Disable()
 
 	map_walls := []utils.RectSpecs{
 		{
@@ -78,13 +82,14 @@ func drawMap() {
 		},
 	}
 
-	lifecycle.Register(&lifecycle.GameObject{
+	wall_instance = lifecycle.Register(&lifecycle.GameObject{
 		Render: func() {
 			for _, wall := range map_walls {
 				render.DrawRect(wall, render.White)
 			}
 		},
 	})
+	lifecycle.Disable(wall_instance)
 }
 
 func init_player() {
@@ -99,18 +104,18 @@ func init_player() {
 
 	show_adjacent()
 
-	lifecycle.Register(&lifecycle.GameObject{
+	player_instance = lifecycle.Register(&lifecycle.GameObject{
 		Start: func() {
-			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_W, func(data any) {
+			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_W, func(data any) {
 				move_player(gomesmath.Vector2{X: 0, Y: -1})
 			})
-			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_S, func(data any) {
+			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_S, func(data any) {
 				move_player(gomesmath.Vector2{X: 0, Y: 1})
 			})
-			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_D, func(data any) {
+			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_D, func(data any) {
 				move_player(gomesmath.Vector2{X: 1, Y: 0})
 			})
-			events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_A, func(data any) {
+			gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_A, func(data any) {
 				move_player(gomesmath.Vector2{X: -1, Y: 0})
 			})
 		},
@@ -123,6 +128,8 @@ func init_player() {
 			}
 		},
 	})
+
+	lifecycle.Disable(player_instance)
 }
 
 func move_player(coord gomesmath.Vector2) {
@@ -150,12 +157,10 @@ func move_player(coord gomesmath.Vector2) {
 	show_adjacent()
 
 	if tile.HasEnemy {
-		start_combat()
+		gomesevents.Emit(gomesevents.Game, events.SceneChangeEvent{
+			Scene: config.SCENE_MAP,
+		})
 	}
-}
-
-func start_combat() {
-	//RunCombat()
 }
 
 func show_adjacent() {

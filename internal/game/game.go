@@ -23,6 +23,8 @@ func Init() {
 
 	time.AfterFunc(time.Millisecond*200, func() {
 		creation.Show()
+		gamemap.Hide()
+		combat.Hide()
 	})
 }
 
@@ -37,9 +39,11 @@ func change_scene(current string) {
 	switch current {
 	case config.SCENE_CREATION:
 		creation.Hide()
+		gamemap.Show()
 
 	case config.SCENE_MAP:
 		gamemap.Hide()
+		combat.Show()
 
 	case config.SCENE_COMBAT:
 		combat.Hide()

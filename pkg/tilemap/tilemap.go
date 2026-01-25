@@ -88,6 +88,30 @@ func NewTileMap(map_size math.Vector2, tile_rect utils.RectSpecs, offset int) *T
 	return tilemap
 }
 
+func (m *TileMap) Enable() {
+	for _, row := range m.Tiles {
+		for _, tile := range row {
+			if tile.Sprite != nil && tile.Enabled {
+				tile.Sprite.Enable()
+			}
+		}
+	}
+
+	lifecycle.Enable(m.instance)
+}
+
+func (m *TileMap) Disable() {
+	for _, row := range m.Tiles {
+		for _, tile := range row {
+			if tile.Sprite != nil {
+				tile.Sprite.Disable()
+			}
+		}
+	}
+
+	lifecycle.Disable(m.instance)
+}
+
 func (m *TileMap) DrawMapFile(file string) {
 	pixels, err := getPixels(file)
 	if err != nil {
