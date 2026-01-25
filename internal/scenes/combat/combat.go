@@ -4,8 +4,11 @@ import (
 	"gates/internal/actors"
 	data_enemies "gates/internal/data/enemies"
 	data_weapons "gates/internal/data/weapons"
+	"gates/internal/events"
 	"gates/pkg/skill"
 	"math/rand/v2"
+
+	"github.com/Papiermond/eventbus"
 )
 
 type GameState int
@@ -40,6 +43,8 @@ func Init() {
 		data_enemies.Werewolf,
 		data_enemies.Vampire,
 	}
+
+	register_events()
 }
 
 func Show() {
@@ -50,6 +55,12 @@ func Show() {
 func Hide() {
 	player.Disable()
 	enemy.Disable()
+}
+
+func register_events() {
+	events.Bus.Subscribe(events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
+		enemy.Disable()
+	})
 }
 
 func LoadPlayerData(skills skill.Skill, weapon data_weapons.Weapon) {

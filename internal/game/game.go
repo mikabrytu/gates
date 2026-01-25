@@ -61,6 +61,8 @@ func change_scene(to_close string) {
 		gamemap.Show()
 
 	case config.SCENE_MAP:
+		time.Sleep(time.Millisecond * 400)
+
 		gamemap.Hide()
 
 		combat.LoadPlayerData(player_skills, player_weapon)
@@ -68,6 +70,8 @@ func change_scene(to_close string) {
 		combat.Show()
 
 	case config.SCENE_COMBAT:
+		time.Sleep(time.Millisecond * 600)
+
 		combat.Hide()
 		gamemap.Show()
 
