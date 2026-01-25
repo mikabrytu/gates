@@ -11,6 +11,7 @@ import (
 	"gates/pkg/skill"
 	"time"
 
+	"github.com/Papiermond/eventbus"
 	gomesevents "github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/render"
 )
@@ -47,6 +48,10 @@ func register_events() {
 
 		change_scene(to_close.Scene)
 	})
+
+	events.Bus.Subscribe(events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
+		change_scene(config.SCENE_COMBAT)
+	})
 }
 
 func change_scene(to_close string) {
@@ -64,6 +69,7 @@ func change_scene(to_close string) {
 
 	case config.SCENE_COMBAT:
 		combat.Hide()
+		gamemap.Show()
 
 	case config.SCENE_LEVEL_UP:
 		levelup.Hide()

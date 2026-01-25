@@ -45,6 +45,7 @@ type Player struct {
 	is_defending        bool
 	is_stunned          bool
 	is_concentrating    bool
+	enabled             bool
 }
 
 const PLAYER_HP_PER_LEVEL int = 5
@@ -61,6 +62,7 @@ func NewPlayer() *Player {
 		is_defending:        false,
 		is_stunned:          false,
 		is_concentrating:    false,
+		enabled:             false,
 	}
 
 	player.max_hp_width = 512
@@ -105,6 +107,10 @@ func NewPlayer() *Player {
 func (p *Player) start() {
 	// Input
 	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_MOUSE_CLICK_DOWN, func(data any) {
+		if !p.enabled {
+			return
+		}
+
 		click := data.(gomesevents.InputMouseClickDownEvent)
 
 		if p.is_animating || p.is_defending || p.is_stunned {
@@ -122,6 +128,10 @@ func (p *Player) start() {
 	})
 
 	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_MOUSE_CLICK_UP, func(data any) {
+		if !p.enabled {
+			return
+		}
+
 		p.defend(false)
 	})
 
@@ -186,6 +196,8 @@ func (p *Player) destroy() {
 }
 
 func (p *Player) Enable() {
+	p.enabled = true
+
 	if p.sprite != nil {
 		p.sprite.Enable()
 	}
@@ -194,12 +206,15 @@ func (p *Player) Enable() {
 }
 
 func (p *Player) Disable() {
+	p.enabled = false
+
 	if p.damage_ui_text != nil {
 		p.damage_ui_text.Disable()
 	}
 
 	if p.sprite != nil {
 		p.sprite.Disable()
+		println("Player sprite should be disabled")
 	}
 
 	lifecycle.Disable(p.instance)
