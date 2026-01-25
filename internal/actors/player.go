@@ -257,6 +257,10 @@ func (p *Player) LoadData(weapon data.Weapon, skills skill.Skill) {
 	print(config.Green + message + config.Reset)
 }
 
+func (p *Player) GetLevel() int {
+	return p.skills.GetLevel()
+}
+
 func (p *Player) calc_damage() int {
 	return p.current_weapon.Damage * p.skills.STR
 }

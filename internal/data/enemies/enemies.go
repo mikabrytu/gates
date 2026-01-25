@@ -8,6 +8,7 @@ type EnemySpecs struct {
 	Attack_Interval int
 	Attack_Damage   int
 	Defense         int
+	MinLevel        int
 }
 
 const SPRITE_SIZE = 512
@@ -21,6 +22,7 @@ var Rat = EnemySpecs{
 	Attack_Interval: BASE_INTERVAL,
 	Attack_Damage:   4,
 	Defense:         1,
+	MinLevel:        1,
 }
 
 var Wolf = EnemySpecs{
@@ -31,6 +33,7 @@ var Wolf = EnemySpecs{
 	Attack_Interval: BASE_INTERVAL,
 	Attack_Damage:   6,
 	Defense:         1,
+	MinLevel:        1,
 }
 
 var Zombie = EnemySpecs{
@@ -41,6 +44,7 @@ var Zombie = EnemySpecs{
 	Attack_Interval: 2500,
 	Attack_Damage:   8,
 	Defense:         2,
+	MinLevel:        2,
 }
 
 var Goblin = EnemySpecs{
@@ -51,6 +55,7 @@ var Goblin = EnemySpecs{
 	Attack_Interval: 2250,
 	Attack_Damage:   12,
 	Defense:         2,
+	MinLevel:        3,
 }
 
 var Skeleton = EnemySpecs{
@@ -61,6 +66,7 @@ var Skeleton = EnemySpecs{
 	Attack_Interval: 2000,
 	Attack_Damage:   16,
 	Defense:         3,
+	MinLevel:        3,
 }
 
 var Bandit = EnemySpecs{
@@ -71,6 +77,7 @@ var Bandit = EnemySpecs{
 	Attack_Interval: 1700,
 	Attack_Damage:   20,
 	Defense:         3,
+	MinLevel:        4,
 }
 
 var Orc = EnemySpecs{
@@ -81,6 +88,7 @@ var Orc = EnemySpecs{
 	Attack_Interval: 1500,
 	Attack_Damage:   24,
 	Defense:         4,
+	MinLevel:        5,
 }
 
 var Werewolf = EnemySpecs{
@@ -91,6 +99,7 @@ var Werewolf = EnemySpecs{
 	Attack_Interval: 1000,
 	Attack_Damage:   28,
 	Defense:         5,
+	MinLevel:        6,
 }
 
 var Vampire = EnemySpecs{
@@ -101,6 +110,7 @@ var Vampire = EnemySpecs{
 	Attack_Interval: 750,
 	Attack_Damage:   28,
 	Defense:         5,
+	MinLevel:        8,
 }
 
 var Dragon = EnemySpecs{
@@ -111,4 +121,5 @@ var Dragon = EnemySpecs{
 	Attack_Interval: BASE_INTERVAL,
 	Attack_Damage:   32,
 	Defense:         6,
+	MinLevel:        10,
 }
