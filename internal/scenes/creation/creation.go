@@ -2,8 +2,9 @@ package creation
 
 import (
 	"gates/config"
+	"gates/internal/events"
 
-	"github.com/mikabrytu/gomes-engine/events"
+	gomesevents "github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/math"
 	"github.com/mikabrytu/gomes-engine/render"
 )
@@ -39,23 +40,23 @@ func Hide() {
 }
 
 func register_events() {
-	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_1, func(data any) {
+	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_1, func(data any) {
 		option_listener(1)
 	})
 
-	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_2, func(data any) {
+	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_2, func(data any) {
 		option_listener(2)
 	})
 
-	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_3, func(data any) {
+	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_3, func(data any) {
 		option_listener(3)
 	})
 
-	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_4, func(data any) {
+	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_4, func(data any) {
 		option_listener(4)
 	})
 
-	events.Subscribe(events.Input, events.INPUT_KEYBOARD_PRESSED_5, func(data any) {
+	gomesevents.Subscribe(gomesevents.Input, gomesevents.INPUT_KEYBOARD_PRESSED_5, func(data any) {
 		option_listener(5)
 	})
 }
@@ -76,6 +77,12 @@ func option_listener(option int) {
 	case Class:
 		state = Weapon
 		prepare_weapon_text()
+	case Weapon:
+		// TODO: Save player choices to apply on player actor at combat scene
+
+		gomesevents.Emit(gomesevents.Game, events.SceneChangeEvent{
+			Scene: config.SCENE_CREATION,
+		})
 	}
 }
 
