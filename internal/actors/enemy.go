@@ -210,6 +210,7 @@ func (e *Enemy) stop() {
 	go func() {
 		message := config.Yellow + "Enemy " + e.specs.Name + " is dead" + config.Reset
 		events.Bus.Publish(events.EnemyDeadEvent{
+			XP:      e.specs.XP,
 			Message: message,
 		})
 	}()

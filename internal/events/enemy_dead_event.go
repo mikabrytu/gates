@@ -3,6 +3,7 @@ package events
 import "github.com/Papiermond/eventbus"
 
 type EnemyDeadEvent struct {
+	XP      int
 	Message string
 }
 
