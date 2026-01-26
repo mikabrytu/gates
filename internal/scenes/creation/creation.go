@@ -5,7 +5,7 @@ import (
 	"gates/config"
 	data "gates/internal/data/weapons"
 	"gates/internal/events"
-	"gates/pkg/skill"
+	"gates/pkg/level"
 
 	gomesevents "github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/math"
@@ -18,15 +18,16 @@ const (
 	Race CreationState = iota
 	Class
 	Equipment
+	Done
 )
 
 var state CreationState
 var fonts [6]*render.Font
-var character skill.Skill
+var character level.Skills
 
 func Init() {
 	state = Race
-	character = skill.Skill{}
+	character = level.Skills{}
 
 	register_events()
 	init_fonts()
@@ -75,6 +76,10 @@ func init_fonts() {
 }
 
 func option_listener(option int) {
+	if state == Done {
+		return
+	}
+
 	if state != Equipment {
 		switch option {
 		case 1:
@@ -94,6 +99,7 @@ func option_listener(option int) {
 		state = Equipment
 		prepare_weapon_text()
 	case Equipment:
+		state = Done
 		message := fmt.Sprintf(
 			"Character Created! Attributes: { STR: %v, INT: %v, SPD: %v }\n",
 			character.STR,
