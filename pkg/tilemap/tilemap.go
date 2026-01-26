@@ -2,6 +2,7 @@ package tilemap
 
 import (
 	"fmt"
+	"gates/internal/data/items"
 	"image"
 	"image/png"
 	"os"
@@ -32,6 +33,7 @@ type Tile struct {
 	Coord      math.Vector2
 	Rect       utils.RectSpecs
 	Sprite     *render.Sprite
+	Item       items.Item
 	Color      render.Color
 	HasEnemy   bool
 	HasItem    bool
@@ -43,6 +45,7 @@ type TileRules struct {
 	Chan       Channel
 	ChanValue  uint8
 	SpritePath string
+	Item       items.Item
 	Color      render.Color
 	Walkable   bool
 }
@@ -154,6 +157,8 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 						tile.HasItem = true
 						tile.Enabled = false
 						tile.Color = r.Color
+						tile.IsWalkable = r.Walkable
+						tile.Item = r.Item
 					}
 				case B:
 					if pixels[i][j].B == r.ChanValue {

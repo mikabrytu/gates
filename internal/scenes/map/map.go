@@ -2,6 +2,7 @@ package gamemap
 
 import (
 	"gates/config"
+	"gates/internal/data/items"
 	data "gates/internal/data/map_rules"
 	"gates/internal/events"
 	"gates/pkg/tilemap"
@@ -18,23 +19,29 @@ var wall_instance *lifecycle.GameObject
 var player_instance *lifecycle.GameObject
 var player_rect utils.RectSpecs
 var player_coord gomesmath.Vector2
+var player_items []items.Item
+var enabled bool
 
 var MAP_SIZE = gomesmath.Vector2{X: 9, Y: 9}
 
 const SCALE int = 96
 
 func Init() {
+	player_items = make([]items.Item, 0)
+
 	drawMap()
 	init_player()
 }
 
 func Show() {
+	enabled = true
 	tmap.Enable()
 	lifecycle.Enable(wall_instance)
 	lifecycle.Enable(player_instance)
 }
 
 func Hide() {
+	enabled = false
 	tmap.Disable()
 	lifecycle.Disable(wall_instance)
 	lifecycle.Disable(player_instance)
@@ -55,6 +62,7 @@ func drawMap() {
 	tmap.DrawMapAssetsFromFile(data.RULES, map_file)
 	tmap.Disable()
 
+	wall_color := render.Color{R: 155, G: 173, B: 183, A: 255}
 	map_walls := []utils.RectSpecs{
 		{
 			PosX:   (config.SCREEN_SIZE.X / 2) - ((SCALE * MAP_SIZE.X) / 2) - ((offset * MAP_SIZE.X) / 2) - 4,
@@ -85,7 +93,7 @@ func drawMap() {
 	wall_instance = lifecycle.Register(&lifecycle.GameObject{
 		Render: func() {
 			for _, wall := range map_walls {
-				render.DrawRect(wall, render.White)
+				render.DrawRect(wall, wall_color)
 			}
 		},
 	})
@@ -133,19 +141,34 @@ func init_player() {
 }
 
 func move_player(coord gomesmath.Vector2) {
+	if !enabled {
+		return
+	}
+
 	if (player_coord.X+coord.X) >= MAP_SIZE.X ||
 		(player_coord.X+coord.X) < 0 ||
 		(player_coord.Y+coord.Y) >= MAP_SIZE.Y ||
 		(player_coord.Y+coord.Y) < 0 {
-		println("Trying to move out of bounds. Stopping player movement")
 		return
 	}
 
 	tile := tmap.Tiles[player_coord.Y+coord.Y][player_coord.X+coord.X]
 
 	if !tile.IsWalkable {
-		println("Player is trying to move to a wall. Stopping movement")
-		return
+		unlock := false
+		if tile.Item.Type == items.Lock {
+			for _, i := range player_items {
+				if tile.Item.Link == i.ID {
+					unlock = true
+					tile.IsWalkable = true
+					break
+				}
+			}
+		}
+
+		if !unlock {
+			return
+		}
 	}
 
 	player_coord.X += coord.X
@@ -161,6 +184,14 @@ func move_player(coord gomesmath.Vector2) {
 		gomesevents.Emit(gomesevents.Game, events.SceneChangeEvent{
 			Scene: config.SCENE_MAP,
 		})
+	}
+
+	if tile.HasItem {
+		tile.HasItem = false
+
+		if tile.Item.Type != items.Lock {
+			player_items = append(player_items, tile.Item)
+		}
 	}
 }
 

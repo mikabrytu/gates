@@ -1,22 +1,13 @@
 package data
 
 import (
+	"gates/internal/data/items"
 	"gates/pkg/tilemap"
 
 	"github.com/mikabrytu/gomes-engine/render"
 )
 
 var RULES []tilemap.TileRules = []tilemap.TileRules{
-	{
-		Chan:      tilemap.R,
-		ChanValue: 255,
-		Color:     render.Red,
-	},
-	{
-		Chan:      tilemap.G,
-		ChanValue: 255,
-		Color:     render.Yellow,
-	},
 	{
 		Chan:       tilemap.B,
 		ChanValue:  255,
@@ -112,5 +103,72 @@ var RULES []tilemap.TileRules = []tilemap.TileRules{
 		ChanValue:  14,
 		SpritePath: "assets/images/sprites/tiles/wall_nws.png",
 		Walkable:   false,
+	},
+	{
+		Chan:      tilemap.R,
+		ChanValue: 255,
+		Color:     render.Red,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 255,
+		Color:     render.Yellow,
+		Walkable:  true,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 1,
+		Item:      items.DOORS[0],
+		Color:     render.Brown,
+		Walkable:  false,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 2,
+		Item:      items.DOORS[1],
+		Color:     render.Brown,
+		Walkable:  false,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 3,
+		Item:      items.DOORS[2],
+		Color:     render.Brown,
+		Walkable:  false,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 4,
+		Item:      items.DOORS[3],
+		Color:     render.Brown,
+		Walkable:  false,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 5,
+		Item:      items.KEYS[0],
+		Color:     render.Yellow,
+		Walkable:  true,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 6,
+		Item:      items.KEYS[1],
+		Color:     render.Yellow,
+		Walkable:  true,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 7,
+		Item:      items.KEYS[2],
+		Color:     render.Yellow,
+		Walkable:  true,
+	},
+	{
+		Chan:      tilemap.G,
+		ChanValue: 8,
+		Item:      items.KEYS[3],
+		Color:     render.Yellow,
+		Walkable:  true,
 	},
 }
