@@ -3,6 +3,7 @@ package levelup
 import (
 	"gates/config"
 	"gates/internal/events"
+	"gates/pkg/level"
 
 	gomesevents "github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/math"
@@ -19,11 +20,12 @@ func Init() {
 
 func Show() {
 	enabled = true
-	show_level_up_text()
+	show_text()
 }
 
 func Hide() {
 	enabled = false
+	hide_text()
 }
 
 func register_events() {
@@ -48,7 +50,7 @@ func init_fonts() {
 	}
 }
 
-func show_level_up_text() {
+func show_text() {
 	messages := []string{
 		"LEVEL UP. Choose a skill to increase",
 		"1 - STR",
@@ -63,10 +65,29 @@ func show_level_up_text() {
 	}
 }
 
+func hide_text() {
+	for _, f := range fonts {
+		f.Disable()
+	}
+}
+
 func choice_listener(choice int) {
-	// TODO: Save this on a player data container
+	if !enabled {
+		return
+	}
+
+	skill := level.Skills{}
+	switch choice {
+	case 1:
+		skill.STR = 1
+	case 2:
+		skill.INT = 1
+	case 3:
+		skill.SPD = 1
+	}
 
 	gomesevents.Emit(gomesevents.Game, events.SceneChangeEvent{
 		Scene: config.SCENE_LEVEL_UP,
+		Data:  []any{skill},
 	})
 }

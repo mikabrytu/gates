@@ -6,8 +6,8 @@ import (
 	data "gates/internal/data/weapons"
 	"gates/internal/events"
 	"gates/pkg/health"
+	"gates/pkg/level"
 	"gates/pkg/math"
-	"gates/pkg/skill"
 	"gates/pkg/spell"
 	"math/rand/v2"
 	"time"
@@ -24,7 +24,7 @@ type Player struct {
 	instance            *lifecycle.GameObject
 	sprite              *render.Sprite
 	health              *health.Health
-	skills              *skill.Skill
+	skill_data          *level.LevelData
 	damage_ui_text      *render.Font
 	current_weapon      data.Weapon
 	weapon_rect         utils.RectSpecs
@@ -39,13 +39,16 @@ type Player struct {
 	og_recovery_width   int
 	concentration_count int
 	can_attack          bool
-	can_level_up        bool
 	is_attacking        bool
 	is_animating        bool
 	is_defending        bool
 	is_stunned          bool
 	is_concentrating    bool
 	enabled             bool
+}
+
+var PLAYER_LEVEL_UP_THRESHOLDS = []int{
+	10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
 }
 
 const PLAYER_HP_PER_LEVEL int = 5
@@ -56,7 +59,6 @@ func NewPlayer() *Player {
 	player := &Player{
 		concentration_count: 0,
 		can_attack:          true,
-		can_level_up:        false,
 		is_attacking:        false,
 		is_animating:        false,
 		is_defending:        false,
@@ -141,11 +143,12 @@ func (p *Player) start() {
 		p.take_damage_listener(int(damage))
 	})
 
+	// Enemy
 	events.Bus.Subscribe(events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
-		p.lost_concentration(false)
+		xp := e.(events.EnemyDeadEvent).XP
+		p.gain_xp_listener(xp)
 	})
 
-	// Enemy
 	gomesevents.Subscribe(gomesevents.Game, events.ENEMY_BREAK_PARALYSIS_EVENT, func(data any) {
 		println("Enemy is trying to break free from Paralysis")
 		p.lost_concentration(false)
@@ -191,7 +194,7 @@ func (p *Player) destroy() {
 	p.damage_ui_text.Clear()
 	p.sprite.Clear()
 	p.health = nil
-	p.skills = nil
+	p.skill_data = nil
 	p = nil
 }
 
@@ -220,7 +223,7 @@ func (p *Player) Disable() {
 	lifecycle.Disable(p.instance)
 }
 
-func (p *Player) LoadData(weapon data.Weapon, skills skill.Skill) {
+func (p *Player) LoadData(weapon data.Weapon, skills level.Skills) {
 	p.current_weapon = weapon
 	p.weapon_rect = utils.RectSpecs{
 		PosX:   config.SCREEN_SIZE.X - p.current_weapon.SpriteSize.X + p.current_weapon.SpriteOffset.X,
@@ -239,30 +242,42 @@ func (p *Player) LoadData(weapon data.Weapon, skills skill.Skill) {
 	p.sprite.Init()
 	p.sprite.Disable()
 
-	p.skills = skill.NewSkill()
-	p.skills.IncreaseSTR(skills.STR)
-	p.skills.IncreaseINT(skills.INT)
-	p.skills.IncreaseSPD(skills.SPD)
-	p.max_hp = PLAYER_HP_PER_LEVEL * p.skills.GetTotalSkillPoints()
+	p.skill_data = level.NewLevelData()
+	p.skill_data.IncreaseSTR(skills.STR)
+	p.skill_data.IncreaseINT(skills.INT)
+	p.skill_data.IncreaseSPD(skills.SPD)
+	p.max_hp = PLAYER_HP_PER_LEVEL * p.skill_data.GetTotalSkillPoints()
 	p.health = health.Init(p.max_hp)
 
 	message := fmt.Sprintf(
 		"Player data loaded. Level %v: { STR: %v, INT: %v SPD: %v } | Weapon: %v\n",
-		p.skills.GetLevel(),
-		p.skills.STR,
-		p.skills.INT,
-		p.skills.SPD,
+		p.skill_data.Current,
+		p.skill_data.Attributes.STR,
+		p.skill_data.Attributes.INT,
+		p.skill_data.Attributes.SPD,
 		p.current_weapon.Name,
 	)
 	print(config.Green + message + config.Reset)
 }
 
+func (p *Player) LevelUp(data level.Skills) {
+	p.skill_data.LevelUp(data)
+	p.health.ChangeMax(p.health.GetMax() + (p.max_hp / 2))
+	p.health.Reset()
+
+	println(fmt.Sprintf("Player Current Level: %d {STR: %d, INT: %d, SPD: %v} \n",
+		p.skill_data.Current,
+		p.skill_data.Attributes.STR,
+		p.skill_data.Attributes.INT,
+		p.skill_data.Attributes.SPD))
+}
+
 func (p *Player) GetLevel() int {
-	return p.skills.GetLevel()
+	return p.skill_data.Current
 }
 
 func (p *Player) calc_damage() int {
-	return p.current_weapon.Damage * p.skills.STR
+	return p.current_weapon.Damage * p.skill_data.Attributes.STR
 }
 
 func (p *Player) spell_effect() spell.Effect {
@@ -270,7 +285,7 @@ func (p *Player) spell_effect() spell.Effect {
 		return spell.Effect{}
 	}
 
-	if p.concentration_count >= p.skills.INT {
+	if p.concentration_count >= p.skill_data.Attributes.INT {
 		println("Player cannot active more spells until concentration break")
 		return spell.Effect{}
 	}
@@ -295,7 +310,7 @@ func (p *Player) spell_effect() spell.Effect {
 			name = "Paralysis"
 		}
 
-		print(fmt.Sprintf(config.Yellow+"Player triggered spell effect: %v. Max Stack: %v\n"+config.Reset, name, p.skills.INT))
+		print(fmt.Sprintf(config.Yellow+"Player triggered spell effect: %v. Max Stack: %v\n"+config.Reset, name, p.skill_data.Attributes.INT))
 
 		return spell.Effect{
 			Type:  effect_type,
@@ -304,6 +319,32 @@ func (p *Player) spell_effect() spell.Effect {
 	}
 
 	return spell.Effect{}
+}
+
+func (p *Player) gain_xp_listener(xp int) {
+	p.skill_data.GainXP(xp)
+
+	message := fmt.Sprintf("Player received %v xp from the enemy. And it now have %v total xp\n", xp, p.skill_data.XP)
+	print(config.Green + message + config.Reset)
+
+	for i, up := range PLAYER_LEVEL_UP_THRESHOLDS {
+		if p.skill_data.Current <= (i+1) && p.skill_data.XP >= up {
+			message := fmt.Sprintf(
+				"Player have %v xp and next threshold is %v. Time to level up\n",
+				p.skill_data.XP,
+				up,
+			)
+			print(config.Green + message + config.Reset)
+
+			time.AfterFunc(time.Millisecond*200, func() {
+				gomesevents.Emit(gomesevents.Game, events.PlayerCanLevelUpEvent{})
+			})
+
+			break
+		}
+	}
+
+	p.lost_concentration(false)
 }
 
 func (p *Player) attack_listener() {
@@ -338,7 +379,7 @@ func (p *Player) attack_listener() {
 }
 
 func (p *Player) take_damage_listener(base_damage int) {
-	damage := max(base_damage/p.skills.STR, 1)
+	damage := max(base_damage/p.skill_data.Attributes.STR, 1)
 
 	if p.is_defending {
 		p.negate_damage(base_damage)
@@ -407,36 +448,8 @@ func (p *Player) negate_damage(damage int) {
 	}
 }
 
-func (p *Player) level_up_listener(s int) {
-	if !p.can_level_up {
-		return
-	}
-
-	level_up := skill.Skill{}
-	if s == 1 {
-		level_up.STR = 1
-	}
-	if s == 2 {
-		level_up.INT = 1
-	}
-	if s == 3 {
-		level_up.SPD = 1
-	}
-
-	p.skills.LevelUp(level_up)
-	p.can_level_up = false
-	p.health.ChangeMax(p.health.GetMax() + (p.max_hp / 2))
-	p.health.Reset()
-
-	println(fmt.Sprintf("Player Current Level: %d {STR: %d, INT: %d, SPD: %v} \n",
-		p.skills.GetLevel(),
-		p.skills.STR,
-		p.skills.INT,
-		p.skills.SPD))
-}
-
 func (p *Player) get_recovery() int {
-	return p.current_weapon.Recovery / p.skills.SPD
+	return p.current_weapon.Recovery / p.skill_data.Attributes.SPD
 }
 
 func (p *Player) lost_concentration(fire_event bool) {

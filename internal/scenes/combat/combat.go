@@ -5,7 +5,7 @@ import (
 	data_enemies "gates/internal/data/enemies"
 	data_weapons "gates/internal/data/weapons"
 	"gates/internal/events"
-	"gates/pkg/skill"
+	"gates/pkg/level"
 	"math/rand/v2"
 
 	"github.com/Papiermond/eventbus"
@@ -63,11 +63,15 @@ func register_events() {
 	})
 }
 
-func LoadPlayerData(skills skill.Skill, weapon data_weapons.Weapon) {
+func LoadPlayerData(skills level.Skills, weapon data_weapons.Weapon) {
 	if is_first_time {
 		is_first_time = false
 		player.LoadData(weapon, skills)
 	}
+}
+
+func PlayerLevelUp(level_up level.Skills) {
+	player.LevelUp(level_up)
 }
 
 func LoadEnemy() {

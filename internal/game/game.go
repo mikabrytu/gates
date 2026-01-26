@@ -8,7 +8,7 @@ import (
 	"gates/internal/scenes/creation"
 	levelup "gates/internal/scenes/level_up"
 	gamemap "gates/internal/scenes/map"
-	"gates/pkg/skill"
+	"gates/pkg/level"
 	"time"
 
 	"github.com/Papiermond/eventbus"
@@ -16,7 +16,7 @@ import (
 	"github.com/mikabrytu/gomes-engine/render"
 )
 
-var player_skills skill.Skill
+var player_skills level.Skills
 var player_weapon weapons.Weapon
 
 func Init() {
@@ -42,11 +42,21 @@ func register_events() {
 		to_close := data.(events.SceneChangeEvent)
 
 		if to_close.Scene == config.SCENE_CREATION {
-			player_skills = to_close.Data[0].(skill.Skill)
+			player_skills = to_close.Data[0].(level.Skills)
 			player_weapon = to_close.Data[1].(weapons.Weapon)
 		}
 
+		if to_close.Scene == config.SCENE_LEVEL_UP {
+			combat.PlayerLevelUp(to_close.Data[0].(level.Skills))
+		}
+
 		change_scene(to_close.Scene)
+	})
+
+	gomesevents.Subscribe(gomesevents.Game, events.PLAYER_CAN_LEVEL_UP_EVENT, func(data any) {
+		combat.Hide()
+		gamemap.Hide()
+		levelup.Show()
 	})
 
 	events.Bus.Subscribe(events.ENEMY_DEAD_EVENT, func(e eventbus.Event) {
@@ -77,5 +87,6 @@ func change_scene(to_close string) {
 
 	case config.SCENE_LEVEL_UP:
 		levelup.Hide()
+		gamemap.Show()
 	}
 }
