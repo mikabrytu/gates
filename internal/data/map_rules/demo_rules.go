@@ -1,0 +1,282 @@
+package data
+
+import (
+	"gates/internal/data/items"
+	"gates/pkg/tilemap"
+
+	"github.com/mikabrytu/gomes-engine/render"
+)
+
+var DEMO_RULES = []tilemap.TileRules{
+	{
+		Name:      "player-spawn-point",
+		Chan:      tilemap.A,
+		ChanValue: 150,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  255,
+		SpritePath: "",
+		Walkable:   true,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  0,
+		SpritePath: "assets/images/sprites/tiles/wall_base.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  1,
+		SpritePath: "assets/images/sprites/tiles/wall_n.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  2,
+		SpritePath: "assets/images/sprites/tiles/wall_s.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  3,
+		SpritePath: "assets/images/sprites/tiles/wall_e.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  4,
+		SpritePath: "assets/images/sprites/tiles/wall_w.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  5,
+		SpritePath: "assets/images/sprites/tiles/wall_ne.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  6,
+		SpritePath: "assets/images/sprites/tiles/wall_ns.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  7,
+		SpritePath: "assets/images/sprites/tiles/wall_nw.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  8,
+		SpritePath: "assets/images/sprites/tiles/wall_se.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  9,
+		SpritePath: "assets/images/sprites/tiles/wall_sw.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  10,
+		SpritePath: "assets/images/sprites/tiles/wall_ew.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  11,
+		SpritePath: "assets/images/sprites/tiles/wall_new.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  12,
+		SpritePath: "assets/images/sprites/tiles/wall_sew.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  13,
+		SpritePath: "assets/images/sprites/tiles/wall_nes.png",
+		Walkable:   false,
+	},
+	{
+		Chan:       tilemap.B,
+		ChanValue:  14,
+		SpritePath: "assets/images/sprites/tiles/wall_nws.png",
+		Walkable:   false,
+	},
+	{
+		Name:      "enemy-random",
+		Chan:      tilemap.R,
+		ChanValue: 255,
+		Color:     render.Red,
+	},
+	{
+		Name:      "boss-evil-wizard",
+		Chan:      tilemap.R,
+		ChanValue: 254,
+		Color:     render.Pink,
+	},
+	{
+		Name:      "boss-fire",
+		Chan:      tilemap.R,
+		ChanValue: 253,
+		Color:     render.Pink,
+	},
+	{
+		Name:      "boss-ice",
+		Chan:      tilemap.R,
+		ChanValue: 252,
+		Color:     render.Pink,
+	},
+	{
+		Name:      "boss-shock",
+		Chan:      tilemap.R,
+		ChanValue: 251,
+		Color:     render.Pink,
+	},
+	{
+		Name:      "item-random",
+		Chan:      tilemap.G,
+		ChanValue: 255,
+		Color:     render.Yellow,
+		Walkable:  true,
+	},
+	{
+		Name:      "lock-door-wizard",
+		Chan:      tilemap.G,
+		ChanValue: 254,
+		Color:     render.Brown,
+		Item:      items.DEMO_DOORS[0],
+		Walkable:  false,
+	},
+	{
+		Name:      "lock-door-fire",
+		Chan:      tilemap.G,
+		ChanValue: 253,
+		Color:     render.Brown,
+		Item:      items.DEMO_DOORS[1],
+		Walkable:  false,
+	},
+	{
+		Name:      "lock-door-ice",
+		Chan:      tilemap.G,
+		ChanValue: 252,
+		Color:     render.Brown,
+		Item:      items.DEMO_DOORS[2],
+		Walkable:  false,
+	},
+	{
+		Name:      "lock-door-shock",
+		Chan:      tilemap.G,
+		ChanValue: 251,
+		Color:     render.Brown,
+		Item:      items.DEMO_DOORS[3],
+		Walkable:  false,
+	},
+	{
+		Name:      "lock-door-ice-alt",
+		Chan:      tilemap.G,
+		ChanValue: 246,
+		Color:     render.Brown,
+		Item:      items.DEMO_DOORS[4],
+		Walkable:  false,
+	},
+
+	{
+		Name:      "lock-door-shock-north",
+		Chan:      tilemap.G,
+		ChanValue: 245,
+		Color:     render.Brown,
+		Item:      items.DEMO_DOORS[5],
+		Walkable:  false,
+	},
+
+	{
+		Name:      "lock-door-shock-reward",
+		Chan:      tilemap.G,
+		ChanValue: 244,
+		Color:     render.Brown,
+		Item:      items.DEMO_DOORS[6],
+		Walkable:  false,
+	},
+
+	{
+		Name:      "lock-door-west-reward",
+		Chan:      tilemap.G,
+		ChanValue: 243,
+		Color:     render.Brown,
+		Item:      items.DEMO_DOORS[7],
+		Walkable:  false,
+	},
+	{
+		Name:      "key-door-wizard",
+		Chan:      tilemap.G,
+		ChanValue: 250,
+		Color:     render.Yellow,
+		Item:      items.DEMO_KEYS[0],
+		Walkable:  true,
+	},
+	{
+		Name:      "key-door-fire",
+		Chan:      tilemap.G,
+		ChanValue: 249,
+		Color:     render.Yellow,
+		Item:      items.DEMO_KEYS[1],
+		Walkable:  true,
+	},
+	{
+		Name:      "key-door-ice",
+		Chan:      tilemap.G,
+		ChanValue: 248,
+		Color:     render.Yellow,
+		Item:      items.DEMO_KEYS[2],
+		Walkable:  true,
+	},
+	{
+		Name:      "key-door-shock",
+		Chan:      tilemap.G,
+		ChanValue: 247,
+		Color:     render.Yellow,
+		Item:      items.DEMO_KEYS[3],
+		Walkable:  true,
+	},
+	{
+		Name:      "key-door-ice-alt",
+		Chan:      tilemap.G,
+		ChanValue: 242,
+		Color:     render.Yellow,
+		Item:      items.DEMO_KEYS[4],
+		Walkable:  true,
+	},
+
+	{
+		Name:      "key-door-shock-north",
+		Chan:      tilemap.G,
+		ChanValue: 241,
+		Color:     render.Yellow,
+		Item:      items.DEMO_KEYS[5],
+		Walkable:  true,
+	},
+
+	{
+		Name:      "key-door-shock-reward",
+		Chan:      tilemap.G,
+		ChanValue: 240,
+		Color:     render.Yellow,
+		Item:      items.DEMO_KEYS[6],
+		Walkable:  true,
+	},
+	{
+		Name:      "key-door-west-reward",
+		Chan:      tilemap.G,
+		ChanValue: 239,
+		Color:     render.Yellow,
+		Item:      items.DEMO_KEYS[7],
+		Walkable:  true,
+	},
+}

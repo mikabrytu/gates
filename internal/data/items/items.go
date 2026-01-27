@@ -11,5 +11,5 @@ type Item struct {
 	Name string
 	ID   int
 	Type ItemType
-	Link int
+	Link int // TODO: Make this an array for multi-key doors
 }
