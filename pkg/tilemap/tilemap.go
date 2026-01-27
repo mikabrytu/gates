@@ -35,6 +35,7 @@ type Tile struct {
 	Sprite     *render.Sprite
 	Item       items.Item
 	Color      render.Color
+	IsSpawn    bool
 	HasEnemy   bool
 	HasItem    bool
 	IsWalkable bool
@@ -42,6 +43,7 @@ type Tile struct {
 }
 
 type TileRules struct {
+	Name       string
 	Chan       Channel
 	ChanValue  uint8
 	SpritePath string
@@ -69,6 +71,7 @@ func NewTileMap(map_size math.Vector2, tile_rect utils.RectSpecs, offset int) *T
 			row = append(row, &Tile{
 				Coord:    math.Vector2{X: x, Y: y},
 				Rect:     rect,
+				IsSpawn:  false,
 				HasEnemy: false,
 				HasItem:  false,
 				Enabled:  false,
@@ -178,6 +181,10 @@ func (m TileMap) DrawMapAssetsFromFile(rules []TileRules, file string) {
 						sprite.Disable()
 
 						tile.Sprite = sprite
+					}
+				case A:
+					if pixels[i][j].A == r.ChanValue {
+						tile.IsSpawn = true
 					}
 				}
 			}

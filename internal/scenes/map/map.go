@@ -22,9 +22,9 @@ var player_coord gomesmath.Vector2
 var player_items []items.Item
 var enabled bool
 
-var MAP_SIZE = gomesmath.Vector2{X: 9, Y: 9}
+var MAP_SIZE = gomesmath.Vector2{X: 28, Y: 22}
 
-const SCALE int = 96
+const SCALE int = 42
 
 func Init() {
 	player_items = make([]items.Item, 0)
@@ -48,7 +48,7 @@ func Hide() {
 }
 
 func drawMap() {
-	map_file := "assets/images/maps/map9x9.png"
+	map_file := config.MAP_DEMO_FILE
 
 	offset := 0
 	rect := utils.RectSpecs{
@@ -59,7 +59,7 @@ func drawMap() {
 	}
 
 	tmap = tilemap.NewTileMap(MAP_SIZE, rect, offset)
-	tmap.DrawMapAssetsFromFile(data.RULES, map_file)
+	tmap.DrawMapAssetsFromFile(data.DEMO_RULES, map_file)
 	tmap.Disable()
 
 	wall_color := render.Color{R: 155, G: 173, B: 183, A: 255}
@@ -101,7 +101,19 @@ func drawMap() {
 }
 
 func init_player() {
-	tile := tmap.Tiles[MAP_SIZE.Y-1][MAP_SIZE.X/2]
+	var tile *tilemap.Tile = nil
+	for _, row := range tmap.Tiles {
+		for _, t := range row {
+			if t.IsSpawn {
+				tile = t
+			}
+		}
+	}
+
+	if tile == nil {
+		panic("Player spawn point not found")
+	}
+
 	player_coord = tile.Coord
 	player_rect = utils.RectSpecs{
 		PosX:   tile.Rect.PosX + (SCALE / 4),
